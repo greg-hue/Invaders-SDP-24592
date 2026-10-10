@@ -99,6 +99,7 @@ public class TitleScreen extends Screen {
         	this.returnCode = 3;
     	else
         	this.returnCode = 2;
+	}
 
 	/**
 	 * Draws the elements associated with the screen.
