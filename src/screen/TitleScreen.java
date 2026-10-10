@@ -77,25 +77,28 @@ public class TitleScreen extends Screen {
 	 * Shifts the focus to the next menu item.
 	 */
 	private void nextMenuItem() {
-		if (this.returnCode == 3)
-			this.returnCode = 0;
-		else if (this.returnCode == 0)
-			this.returnCode = 2;
-		else
-			this.returnCode++;
-	}
+        if (this.returnCode == 2)
+            this.returnCode = 3;
+    	else if (this.returnCode == 3)
+        	this.returnCode = 4;
+    	else if (this.returnCode == 4)
+        	this.returnCode = 0;
+    	else
+        	this.returnCode = 2;
+}
 
 	/**
 	 * Shifts the focus to the previous menu item.
 	 */
 	private void previousMenuItem() {
-		if (this.returnCode == 0)
-			this.returnCode = 3;
-		else if (this.returnCode == 2)
-			this.returnCode = 0;
-		else
-			this.returnCode--;
-	}
+    	if (this.returnCode == 2)
+        	this.returnCode = 0;
+    	else if (this.returnCode == 0)
+        	this.returnCode = 4;
+    	else if (this.returnCode == 4)
+        	this.returnCode = 3;
+    	else
+        	this.returnCode = 2;
 
 	/**
 	 * Draws the elements associated with the screen.
