@@ -898,6 +898,30 @@ public final class DrawManager {
 	}
 
 	/**
+	 * Draws a sprite made of filled pixels, enlarged by a scale factor.
+	 *
+	 * @param sprite
+	 *            Sprite, indexed [row][column].
+	 * @param positionX
+	 *            Left edge of the sprite.
+	 * @param positionY
+	 *            Upper edge of the sprite.
+	 * @param scale
+	 *            Size in pixels of each sprite pixel.
+	 * @param color
+	 *            Color of the sprite.
+	 */
+	public void drawSprite(final boolean[][] sprite, final int positionX,
+			final int positionY, final int scale, final Color color) {
+		backBufferGraphics.setColor(color);
+		for (int row = 0; row < sprite.length; row++)
+			for (int col = 0; col < sprite[row].length; col++)
+				if (sprite[row][col])
+					backBufferGraphics.fillRect(positionX + col * scale,
+							positionY + row * scale, scale, scale);
+	}
+
+	/**
 	 * Dessine un bouclier protecteur autour du vaisseau.
 	 *
 	 * @param screen Écran de jeu cible.
