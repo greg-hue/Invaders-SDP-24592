@@ -85,6 +85,7 @@ public class SettingsScreen extends Screen {
         } else if (inputManager.isKeyDown(KeyEvent.VK_ESCAPE)) {
             this.returnCode = 1;
             this.isRunning = false;
+            AudioManager.playSFX("audio/sfx/menu_back.wav");
         }
     }
 
@@ -107,7 +108,13 @@ public class SettingsScreen extends Screen {
             this.returnCode = 1;
             break;
         }
-        this.isRunning = false;
+                this.isRunning = false;
+
+        if (this.selectedOption == BACK_OPTION) {
+            AudioManager.playSFX("audio/sfx/menu_back.wav");
+        } else {
+            AudioManager.playSFX("audio/sfx/menu_select.wav");
+        }
     }
 
     private void draw() {
