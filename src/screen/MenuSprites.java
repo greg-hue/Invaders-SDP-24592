@@ -76,6 +76,87 @@ public final class MenuSprites {
 			"..#..",
 			"..#..") };
 
+	/** Play icon: a triangle pointing right. */
+	public static final boolean[][] ICON_PLAY = parse(
+		"##.....",
+		"####...",
+		"######.",
+		"#######",
+		"######.",
+		"####...",
+		"##.....");
+
+	/** High scores icon: a trophy. */
+	public static final boolean[][] ICON_TROPHY = parse(
+		"#########",
+		"#.#####.#",
+		"#.#####.#",
+		".#######.",
+		"..#####..",
+		"...###...",
+		"....#....",
+		"...###...",
+		"..#####..");
+
+	/** Settings icon: a gear. */
+	public static final boolean[][] ICON_GEAR = parse(
+		"....#....",
+		".##.#.##.",
+		".#######.",
+		"..##.##..",
+		"###...###",
+		"..##.##..",
+		".#######.",
+		".##.#.##.",
+		"....#....");
+
+	/** Exit icon: a door with a knob. */
+	public static final boolean[][] ICON_DOOR = parse(
+		".#####.",
+		"#######",
+		"##...##",
+		"##...##",
+		"##..###",
+		"##...##",
+		"##...##",
+		"##...##",
+		"#######");
+
+	/** Hangar icon: a hangar building with its big door. */
+	public static final boolean[][] ICON_HANGAR = parse(
+		"...#####...",
+		"..#######..",
+		".#########.",
+		"###########",
+		"#.#######.#",
+		"#.#.#.#.#.#",
+		"#.#######.#",
+		"###########");
+
+	/** Shop icon: a shopping cart. */
+	public static final boolean[][] ICON_SHOP = parse(
+		"##.........",
+		".#.........",
+		".#.#######.",
+		".#.#######.",
+		".#..#####..",
+		".#..#####..",
+		".#########.",
+		"..#.....#..",
+		"..##...##..");
+
+	/** Players records icon: a clipboard with a list. */
+	public static final boolean[][] ICON_RECORDS = parse(
+		"..#####..",
+		"#########",
+		"#.......#",
+		"#.#####.#",
+		"#.......#",
+		"#.#####.#",
+		"#.......#",
+		"#.###...#",
+		"#########");
+
 	/**
 	 * Builds a sprite from rows of text, where '#' is a filled pixel.
 	 *
