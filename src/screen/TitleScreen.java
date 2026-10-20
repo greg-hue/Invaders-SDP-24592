@@ -207,6 +207,7 @@ public class TitleScreen extends Screen {
 		drawBackground();
 		drawManager.drawTitle(this);
 		drawManager.drawMenu(this, this.returnCode);
+		drawManager.drawMenuIcons(this, this.returnCode, this.frameCount);
 
 		drawManager.completeDrawing(this);
 	}
