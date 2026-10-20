@@ -289,33 +289,76 @@ public final class DrawManager {
 	 * @param frame
 	 *            Frame counter, drives the bounce.
 	 */
-	public void drawMenuIcons(final Screen screen, final int option,
-			final int frame) {
-		boolean[][][] icons = { MenuSprites.ICON_PLAY, MenuSprites.ICON_TROPHY,
-				MenuSprites.ICON_GEAR, MenuSprites.ICON_DOOR };
-		String[] labels = { "Play", "High scores", "Settings", "exit" };
-		int[] codes = { 2, 3, 4, 0 };
-		int scale = 2;
+	
+/**
+ * Draws an icon on the left of each main menu entry.
+ * The selected entry is green and its icon bounces.
+ *
+ * @param screen Screen to draw on.
+ * @param option Currently selected menu option.
+ * @param frame Frame counter used for the animation.
+ */
+public void drawMenuIcons(final Screen screen, final int option,
+        final int frame) {
 
-		for (int i = 0; i < icons.length; i++) {
-			int baseline = screen.getHeight() / 3 * 2
-					+ fontRegularMetrics.getHeight() * 2 * i;
-			int textLeft = screen.getWidth() / 2
-					- fontRegularMetrics.stringWidth(labels[i]) / 2;
-			int iconHeight = icons[i].length * scale;
-			int center = baseline - (fontRegularMetrics.getAscent()
-					- fontRegularMetrics.getDescent()) / 2;
-			int x = textLeft - icons[i][0].length * scale - 10;
-			int y = center - iconHeight / 2;
+    boolean[][][] icons = {
+        MenuSprites.ICON_PLAY,    // Play
+        MenuSprites.ICON_SHOP,    // Shop
+        MenuSprites.ICON_HANGAR,  // Hangar
+        MenuSprites.ICON_TROPHY,  // High scores
+        MenuSprites.ICON_RECORDS, // Records & Achievements
+        MenuSprites.ICON_GEAR,    // Settings
+        MenuSprites.ICON_DOOR     // Exit
+    };
 
-			Color color = Color.WHITE;
-			if (codes[i] == option) {
-				color = Color.GREEN;
-				y -= (int) (Math.abs(Math.sin(frame / 7.0)) * 6);
-			}
-			drawSprite(icons[i], x, y, scale, color);
-		}
-	}
+    String[] labels = {
+        "Play",
+        "Shop",
+        "Hangar",
+        "High scores",
+        "Records & Achievements",
+        "Settings",
+        "Exit"
+    };
+
+    int[] codes = { 2, 10, 11, 3, 9, 4, 0 };
+
+    int scale = 2;
+    int fontHeight = fontRegularMetrics.getHeight();
+    int spacing = fontHeight * 3 / 2;
+    int firstY = screen.getHeight() / 2 + fontHeight * 2;
+
+    for (int i = 0; i < icons.length; i++) {
+
+        // Use the exact same baseline as the menu text.
+        int baseline = firstY + i * spacing;
+
+        // Center the icon vertically with the text.
+        int iconHeight = icons[i].length * scale;
+        int center = baseline
+                - (fontRegularMetrics.getAscent()
+                - fontRegularMetrics.getDescent()) / 2;
+
+        int y = center - iconHeight / 2;
+
+        // Position the icon to the left of its label.
+        int textWidth = fontRegularMetrics.stringWidth(labels[i]);
+        int textLeft = screen.getWidth() / 2 - textWidth / 2;
+        int iconWidth = icons[i][0].length * scale;
+        int x = textLeft - iconWidth - 10;
+
+        // Highlight and animate the selected option.
+        Color color = Color.WHITE;
+
+        if (codes[i] == option) {
+            color = Color.GREEN;
+            y -= (int) (Math.abs(Math.sin(frame / 7.0)) * 6);
+        }
+
+        drawSprite(icons[i], x, y, scale, color);
+    }
+}
+
 
     /**
      * For debugging purpouses, draws the canvas borders.
