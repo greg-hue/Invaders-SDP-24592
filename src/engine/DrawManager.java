@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import screen.MenuSprites;
 import screen.Screen;
 import entity.Entity;
 import entity.Ship;
@@ -396,6 +397,46 @@ public final class DrawManager {
 			backBufferGraphics.setColor(Color.WHITE);
 		drawCenteredRegularString(screen, exitString, screen.getHeight() / 3
 				* 2 + fontRegularMetrics.getHeight() * 6);
+	}
+
+
+		/**
+	 * Draws an icon on the left of each main menu entry. The icon of the
+	 * selected entry is green and bounces.
+	 *
+	 * @param screen
+	 *            Screen to draw on.
+	 * @param option
+	 *            Option selected.
+	 * @param frame
+	 *            Frame counter, drives the bounce.
+	 */
+	public void drawMenuIcons(final Screen screen, final int option,
+			final int frame) {
+		boolean[][][] icons = { MenuSprites.ICON_PLAY, MenuSprites.ICON_TROPHY,
+				MenuSprites.ICON_GEAR, MenuSprites.ICON_DOOR };
+		String[] labels = { "Play", "High scores", "Settings", "exit" };
+		int[] codes = { 2, 3, 4, 0 };
+		int scale = 2;
+
+		for (int i = 0; i < icons.length; i++) {
+			int baseline = screen.getHeight() / 3 * 2
+					+ fontRegularMetrics.getHeight() * 2 * i;
+			int textLeft = screen.getWidth() / 2
+					- fontRegularMetrics.stringWidth(labels[i]) / 2;
+			int iconHeight = icons[i].length * scale;
+			int center = baseline - (fontRegularMetrics.getAscent()
+					- fontRegularMetrics.getDescent()) / 2;
+			int x = textLeft - icons[i][0].length * scale - 10;
+			int y = center - iconHeight / 2;
+
+			Color color = Color.WHITE;
+			if (codes[i] == option) {
+				color = Color.GREEN;
+				y -= (int) (Math.abs(Math.sin(frame / 7.0)) * 6);
+			}
+			drawSprite(icons[i], x, y, scale, color);
+		}
 	}
 
 	/**
