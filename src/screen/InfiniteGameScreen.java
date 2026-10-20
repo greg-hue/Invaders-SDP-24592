@@ -142,6 +142,7 @@ public class InfiniteGameScreen extends Screen {
 
 		this.ship = new Ship(this.width / 2, this.height - 30);
 		this.enemies = new ArrayList<ZigzagEnemyShip>();
+		this.ship.setBaseColor(ShipCustomization.getColor());
 		this.bullets = new HashSet<Bullet>();
 		this.enemyBullets = new HashSet<Bullet>();
 		this.spawnCooldown = Core.getCooldown(INITIAL_SPAWN_INTERVAL);
