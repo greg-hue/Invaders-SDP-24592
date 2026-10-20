@@ -31,3 +31,11 @@ Third-party background music used in this project and their licenses.
 - Original: "Spooky Dungeon" by Memoraphile @ You're Perfect Studio
 - Source: https://opengameart.org/content/spooky-dungeon
 - License: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
+
+
+## music_game_urgent
+
+- Original: "Bumblebee Loop", originally composed by Nikolai Rimsky-Korsakov
+- Arrangement and Loop: Johan Brodd
+- Source: https://opengameart.org/content/bumblebee-loop
+- License: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)

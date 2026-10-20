@@ -17,6 +17,10 @@ public class SettingsScreen extends Screen {
 
     private Cooldown selectionCooldown;
     private int selectedOption;
+    /** Option under the mouse on the last frame, -1 if none. */
+    private int lastHoveredOption = -1;
+    /** Starts true so a click held from the previous screen is ignored. */
+    private boolean wasMousePressed = true;
 
     public SettingsScreen(final int width, final int height, final int fps) {
         super(width, height, fps);
@@ -37,6 +41,29 @@ public class SettingsScreen extends Screen {
         super.update();
         draw();
 
+        int hoveredOption = drawManager.getSettingsMenuOptionAt(this,
+                inputManager.getMouseX(), inputManager.getMouseY());
+
+        // Select an option when the mouse moves onto it.
+        if (hoveredOption != this.lastHoveredOption) {
+            this.lastHoveredOption = hoveredOption;
+            if (hoveredOption != -1 && hoveredOption != this.selectedOption) {
+                this.selectedOption = hoveredOption;
+                AudioManager.playSFX("audio/sfx/menu_move.wav");
+            }
+        }
+
+        boolean mousePressed = inputManager.isMousePressed();
+        boolean newMouseClick = mousePressed && !this.wasMousePressed;
+        this.wasMousePressed = mousePressed;
+
+        if (newMouseClick && hoveredOption != -1
+                && this.inputDelay.checkFinished()) {
+            this.selectedOption = hoveredOption;
+            confirmSelectedOption();
+            return;
+        }
+
         if (!this.selectionCooldown.checkFinished()
                 || !this.inputDelay.checkFinished()) {
             return;
@@ -54,26 +81,33 @@ public class SettingsScreen extends Screen {
             this.selectionCooldown.reset();
             AudioManager.playSFX("audio/sfx/menu_move.wav");
         } else if (inputManager.isKeyDown(KeyEvent.VK_SPACE)) {
-            switch (this.selectedOption) {
-            case AUDIO_OPTION:
-                this.returnCode = 5;
-                break;
-            case CONTROLS_OPTION:
-                this.returnCode = 6;
-                break;
-            case GAMEPLAY_OPTION:
-                this.returnCode = 7;
-                break;
-            case BACK_OPTION:
-            default:
-                this.returnCode = 1;
-                break;
-            }
-            this.isRunning = false;
+            confirmSelectedOption();
         } else if (inputManager.isKeyDown(KeyEvent.VK_ESCAPE)) {
             this.returnCode = 1;
             this.isRunning = false;
         }
+    }
+
+    /**
+     * Opens the screen of the selected option.
+     */
+    private void confirmSelectedOption() {
+        switch (this.selectedOption) {
+        case AUDIO_OPTION:
+            this.returnCode = 5;
+            break;
+        case CONTROLS_OPTION:
+            this.returnCode = 6;
+            break;
+        case GAMEPLAY_OPTION:
+            this.returnCode = 7;
+            break;
+        case BACK_OPTION:
+        default:
+            this.returnCode = 1;
+            break;
+        }
+        this.isRunning = false;
     }
 
     private void draw() {

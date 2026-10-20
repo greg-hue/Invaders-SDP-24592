@@ -57,7 +57,11 @@ public class ItemManager {
 
     public void draw(final DrawManager drawManager) {
         for (Item item : this.activeItems) {
-            drawManager.drawEntity(item, item.getPositionX(), item.getPositionY());
+            if (item instanceof ClusterGrenadeItem) {
+                drawManager.drawGrenadeItem(item.getPositionX(), item.getPositionY());
+            } else {
+                drawManager.drawEntity(item, item.getPositionX(), item.getPositionY());
+            }
         }
     }
 

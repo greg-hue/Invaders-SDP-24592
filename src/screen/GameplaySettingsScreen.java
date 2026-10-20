@@ -13,6 +13,10 @@ public class GameplaySettingsScreen extends Screen {
 
     private final Cooldown selectionCooldown;
     private int selectedOption;
+    /** Option under the mouse on the last frame, -1 if none. */
+    private int lastHoveredOption = -1;
+    /** Starts true so a click held from the previous screen is ignored. */
+    private boolean wasMousePressed = true;
 
     public GameplaySettingsScreen(final int width, final int height,
             final int fps) {
@@ -34,6 +38,29 @@ public class GameplaySettingsScreen extends Screen {
         super.update();
         draw();
 
+        int hoveredOption = drawManager.getGameplaySettingsOptionAt(this,
+                inputManager.getMouseX(), inputManager.getMouseY());
+
+        // Select an option when the mouse moves onto it.
+        if (hoveredOption != lastHoveredOption) {
+            lastHoveredOption = hoveredOption;
+            if (hoveredOption != -1 && hoveredOption != selectedOption) {
+                selectedOption = hoveredOption;
+                AudioManager.playSFX("audio/sfx/menu_move.wav");
+            }
+        }
+
+        boolean mousePressed = inputManager.isMousePressed();
+        boolean newMouseClick = mousePressed && !wasMousePressed;
+        wasMousePressed = mousePressed;
+
+        if (newMouseClick && hoveredOption != -1
+                && inputDelay.checkFinished()) {
+            selectedOption = hoveredOption;
+            confirmDifficulty();
+            return;
+        }
+
         if (!selectionCooldown.checkFinished()
                 || !inputDelay.checkFinished()) {
             return;
@@ -51,13 +78,20 @@ public class GameplaySettingsScreen extends Screen {
             selectionCooldown.reset();
             AudioManager.playSFX("audio/sfx/menu_move.wav");
         } else if (inputManager.isKeyDown(KeyEvent.VK_SPACE)) {
-            GameplayConfig.setDifficulty(selectedOption);
-            returnCode = 4;
-            isRunning = false;
+            confirmDifficulty();
         } else if (inputManager.isKeyDown(KeyEvent.VK_ESCAPE)) {
             returnCode = 4;
             isRunning = false;
         }
+    }
+
+    /**
+     * Saves the selected difficulty and returns to the settings menu.
+     */
+    private void confirmDifficulty() {
+        GameplayConfig.setDifficulty(selectedOption);
+        returnCode = 4;
+        isRunning = false;
     }
 
     private void draw() {

@@ -11,7 +11,6 @@ import screen.Screen;
 import engine.Cooldown;
 import engine.Core;
 import engine.DrawManager;
-import engine.DrawManager.SpriteType;
 import engine.GameSettings;
 
 /**
@@ -44,6 +43,12 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 	private static final int DESCENT_DISTANCE = 20;
 	/** Minimum speed allowed. */
 	private static final int MINIMUM_SPEED = 10;
+	/** Horizontal speed of the wave movement. */
+	private static final int WAVE_X_SPEED = 6;
+	/** Maximum vertical amplitude of the wave. */
+	private static final int WAVE_AMPLITUDE = 25;
+	/** Frequency of the vertical oscillation. */
+	private static final double WAVE_FREQUENCY = 0.15;
 
 	/** DrawManager instance. */
 	private DrawManager drawManager;
@@ -52,6 +57,27 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 	/** Screen to draw ships on. */
 	private Screen screen;
 
+	/** Available movement patterns for enemy formations. */
+    private enum MovementPattern {
+        CLASSIC,
+        WAVE_BOUNCE,
+        DIAGONAL_BOUNCE
+    }
+
+	/** Current movement pattern. */
+    private MovementPattern movementPattern = MovementPattern.DIAGONAL_BOUNCE;
+	/** Horizontal direction of the wave: 1 = right, -1 = left. */
+	private int waveDirection = 1;
+	/** Current phase of the wave. */
+	private double wavePhase = 0;
+	/** Reference vertical position the wave oscillates around. */
+	private int waveBaseY;
+    /** Horizontal and vertical speed of the diagonal movement. */
+    private static final int DIAGONAL_SPEED = 4;
+    /** Current segment of the diamond loop (0 to 3). */
+    private int diagonalPhase = 0;
+    /** Initial vertical position of the diamond loop. */
+    private int diagonalBaseY;
 	/** List of enemy ships forming the formation. */
 	private List<List<EnemyShip>> enemyShips;
 	/** Minimum time between shots. */
@@ -129,8 +155,11 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 			throw new IllegalArgumentException("Initial formation position must "
 					+ "have X >= " + SIDE_MARGIN + " and non-negative Y divisible by "
 					+ DESCENT_DISTANCE + ": (" + positionX + "," + positionY + ")");
+		this.waveBaseY = this.positionY;
+        // Initial position of the diagonal movement.
+        this.diagonalBaseY = this.positionY;
 		this.shooters = new ArrayList<EnemyShip>();
-		SpriteType spriteType;
+		EnemyType enemyType;
 
 		this.logger.info("Initializing " + nShipsWide + "x" + nShipsHigh
 				+ " ship formation in (" + positionX + "," + positionY + ")");
@@ -142,17 +171,17 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 		for (List<EnemyShip> column : this.enemyShips) {
 			for (int i = 0; i < this.nShipsHigh; i++) {
 				if (i / (float) this.nShipsHigh < PROPORTION_C)
-					spriteType = SpriteType.EnemyShipC1;
+					enemyType = EnemyType.C;
 				else if (i / (float) this.nShipsHigh < PROPORTION_B
 						+ PROPORTION_C)
-					spriteType = SpriteType.EnemyShipB1;
+					enemyType = EnemyType.B;
 				else
-					spriteType = SpriteType.EnemyShipA1;
+					enemyType = EnemyType.A;
 
-				column.add(new EnemyShip((SEPARATION_DISTANCE 
-						* this.enemyShips.indexOf(column))
-								+ positionX, (SEPARATION_DISTANCE * i)
-								+ positionY, spriteType));
+				column.add(EnemyShip.createByType(enemyType,
+						(SEPARATION_DISTANCE * this.enemyShips.indexOf(column))
+								+ positionX,
+						(SEPARATION_DISTANCE * i) + positionY));
 				this.shipCount++;
 			}
 		}
@@ -165,9 +194,129 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 		this.height = (this.nShipsHigh - 1) * SEPARATION_DISTANCE
 				+ this.shipHeight;
 
-		for (List<EnemyShip> column : this.enemyShips)
-			this.shooters.add(column.get(column.size() - 1));
+		for (List<EnemyShip> column : this.enemyShips) {
+			EnemyShip shooter = column.get(column.size() - 1);
+			shooter.setShootingCooldown(createShooterCooldown());
+			this.shooters.add(shooter);
+		}
 	}
+
+	/** Creates a cooldown for one shooter, based on the level's settings. */
+	private Cooldown createShooterCooldown() {
+		return Core.getVariableCooldown(this.shootingInterval / 2,
+				this.shootingVariance / 2);
+	}
+
+	/**
+	 * Calculates a wave movement with horizontal bouncing, keeping the
+	 * formation inside the screen boundaries. The wave oscillates around the
+	 * initial vertical position the level settings asked for.
+	 *
+	 * @return Movement to apply on the X and Y axes.
+	 */
+	private int[] moveWaveBounce() {
+		int minX = SIDE_MARGIN;
+		int maxX = screen.getWidth() - SIDE_MARGIN - this.width;
+		int minY = this.waveBaseY;
+		int maxY = screen.getHeight() - BOTTOM_MARGIN - this.height;
+
+		int nextX = this.positionX + WAVE_X_SPEED * this.waveDirection;
+		if (nextX >= maxX) {
+			nextX = maxX;
+			this.waveDirection = -1;
+		} else if (nextX <= minX) {
+			nextX = minX;
+			this.waveDirection = 1;
+		}
+
+		this.wavePhase += WAVE_FREQUENCY;
+
+		int amplitude = Math.min(WAVE_AMPLITUDE,
+				Math.max(0, (maxY - minY) / 2));
+		int centerY = Math.max(minY,
+				Math.min(this.waveBaseY + amplitude, maxY - amplitude));
+		int nextY = centerY
+				+ (int) Math.round(amplitude * Math.sin(this.wavePhase));
+		nextY = Math.max(minY, Math.min(nextY, maxY));
+
+		return new int[] { nextX - this.positionX, nextY - this.positionY };
+	}
+
+
+    /**
+     * Moves the formation along a diamond-shaped loop.
+     * The path adapts to the formation's size.
+     *
+     * @return Movement on the X and Y axes.
+     */
+    private int[] moveDiagonalBounce() {
+        int minX = SIDE_MARGIN;
+        int maxX = screen.getWidth() - SIDE_MARGIN - this.width;
+        int minY = Math.max(0, this.diagonalBaseY);
+        int maxY = screen.getHeight() - BOTTOM_MARGIN - this.height;
+
+        maxX = Math.max(minX, maxX);
+        maxY = Math.max(minY, maxY);
+
+        // Adapt the diamond to the available space.
+        int radiusX = Math.min(80, (maxX - minX) / 2);
+        int radiusY = Math.min(40, (maxY - minY) / 2);
+
+        int centerX = minX + (maxX - minX) / 2;
+        int centerY = minY + (maxY - minY) / 2;
+
+        // Diamond vertices: top, right, bottom, left.
+        int[] pointsX = {
+                centerX,
+                centerX + radiusX,
+                centerX,
+                centerX - radiusX
+        };
+
+        int[] pointsY = {
+                centerY - radiusY,
+                centerY,
+                centerY + radiusY,
+                centerY
+        };
+
+        // Current destination vertex.
+        int targetX = pointsX[this.diagonalPhase];
+        int targetY = pointsY[this.diagonalPhase];
+
+        int dx = targetX - this.positionX;
+        int dy = targetY - this.positionY;
+
+        double distance = Math.hypot(dx, dy);
+
+        // Move towards the destination without jumping.
+        int movementX;
+        int movementY;
+
+        if (distance <= DIAGONAL_SPEED) {
+            movementX = dx;
+            movementY = dy;
+
+            // Move to the next vertex.
+            this.diagonalPhase = (this.diagonalPhase + 1) % 4;
+        } else {
+            movementX = (int) Math.round(
+                    dx / distance * DIAGONAL_SPEED);
+            movementY = (int) Math.round(
+                    dy / distance * DIAGONAL_SPEED);
+        }
+
+        // Keep the formation inside the screen.
+        int nextX = Math.max(minX,
+                Math.min(this.positionX + movementX, maxX));
+        int nextY = Math.max(minY,
+                Math.min(this.positionY + movementY, maxY));
+
+        return new int[] {
+                nextX - this.positionX,
+                nextY - this.positionY
+        };
+    }
 
 	/**
 	 * Associates the formation to a given screen.
@@ -217,10 +366,28 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 		this.movementSpeed = (int) (Math.pow(remainingProportion, 2)
 				* this.baseSpeed);
 		this.movementSpeed += MINIMUM_SPEED;
-		
-		movementInterval++;
-		if (movementInterval >= this.movementSpeed) {
-			movementInterval = 0;
+
+        movementInterval++;
+
+        int movementDelay = this.movementSpeed;
+
+// Update diagonal movement more frequently for smooth animation.
+        if (this.movementPattern == MovementPattern.DIAGONAL_BOUNCE) {
+            movementDelay = 2;
+        }
+
+        if (movementInterval >= movementDelay) {
+            movementInterval = 0;
+
+            if (this.movementPattern == MovementPattern.WAVE_BOUNCE) {
+                int[] waveMovement = moveWaveBounce();
+                movementX = waveMovement[0];
+                movementY = waveMovement[1];
+            } else if (this.movementPattern == MovementPattern.DIAGONAL_BOUNCE) {
+                int[] diagonalMovement = moveDiagonalBounce();
+                movementX = diagonalMovement[0];
+                movementY = diagonalMovement[1];
+            } else {
 
 			boolean isAtBottom = positionY
 					+ this.height > screen.getHeight() - BOTTOM_MARGIN;
@@ -266,6 +433,7 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 				movementX = -X_SPEED;
 			else
 				movementY = Y_SPEED;
+			}
 
 			positionX += movementX;
 			positionY += movementY;
@@ -343,15 +511,62 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 	 *            Bullets set to add the bullet being shot.
 	 */
 	public final void shoot(final Set<Bullet> bullets) {
-		// For now, only ships in the bottom row are able to shoot.
-		int index = (int) (Math.random() * this.shooters.size());
-		EnemyShip shooter = this.shooters.get(index);
+		shoot(bullets, null);
+	}
 
-		if (this.shootingCooldown.checkFinished()) {
-			this.shootingCooldown.reset();
-			bullets.add(BulletPool.getBullet(shooter.getPositionX()
-					+ shooter.width / 2, shooter.getPositionY(), BULLET_SPEED));
+	/**
+	 * Shoots a bullet downwards, aimed at the player when one is given.
+	 *
+	 * @param bullets
+	 *            Bullets set to add the bullet being shot.
+	 * @param player
+	 *            Player ship to aim at, or null to shoot straight down.
+	 */
+	public final void shoot(final Set<Bullet> bullets, final Ship player) {
+		if (this.shootingCooldown == null
+				|| !this.shootingCooldown.checkFinished())
+			return;
+
+		// Only ships in the bottom row shoot, and each has its own cooldown.
+		List<EnemyShip> readyShooters = new ArrayList<EnemyShip>();
+		for (EnemyShip shooter : this.shooters)
+			if (shooter.canShoot())
+				readyShooters.add(shooter);
+		if (readyShooters.isEmpty())
+			return;
+
+		int index = (int) (Math.random() * readyShooters.size());
+		EnemyShip shooter = readyShooters.get(index);
+		this.shootingCooldown.reset();
+		shooter.resetShootingCooldown();
+
+		int enemyX = shooter.getPositionX() + shooter.width / 2;
+		int enemyY = shooter.getPositionY();
+
+		if (player == null) {
+			bullets.add(BulletPool.getBullet(enemyX, enemyY, BULLET_SPEED,
+					Bullet.Owner.ENEMY));
+			return;
 		}
+
+		// Aim the bullet at the player instead of straight down.
+		int playerX = player.getPositionX() + player.width / 2;
+		int playerY = player.getPositionY() + player.height / 2;
+		double dx = playerX - enemyX;
+		double dy = playerY - enemyY;
+		double distance = Math.sqrt(dx * dx + dy * dy);
+
+		int speedX = 0;
+		int speedY = BULLET_SPEED;
+		if (distance > 0) {
+			speedX = (int) Math.round((dx / distance) * BULLET_SPEED);
+			speedY = (int) Math.round((dy / distance) * BULLET_SPEED);
+		}
+
+		// An aimed shot can travel sideways or upwards, so the owner is set
+		// explicitly rather than inferred from the speed.
+		bullets.add(BulletPool.getBullet(enemyX, enemyY, speedY, speedX,
+				Bullet.Owner.ENEMY));
 	}
 
 	/**
@@ -383,9 +598,11 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 			EnemyShip nextShooter = getNextShooter(this.enemyShips
 					.get(destroyedShipColumnIndex));
 
-			if (nextShooter != null)
+			if (nextShooter != null) {
+				nextShooter.setShootingCooldown(
+						destroyedShip.getShootingCooldown());
 				this.shooters.set(destroyedShipIndex, nextShooter);
-			else {
+			} else {
 				this.shooters.remove(destroyedShipIndex);
 				this.logger.info("Shooters list reduced to "
 						+ this.shooters.size() + " members.");
@@ -393,6 +610,62 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 		}
 
 		this.shipCount--;
+	}
+
+	/**
+	 * Destroys a ship that touched the player, removing it from the shooters
+	 * in the same frame.
+	 *
+	 * @param enemyShip
+	 *            Ship that collided with the player.
+	 * @return True if the ship was destroyed now, false if it already was.
+	 */
+	public final boolean destroyOnPlayerCollision(final EnemyShip enemyShip) {
+		if (enemyShip == null || enemyShip.isDestroyed())
+			return false;
+		destroy(enemyShip);
+		return true;
+	}
+
+	/**
+	 * Returns the number of enemy ships still alive, for the HUD.
+	 *
+	 * @return Remaining enemy ships.
+	 */
+	public final int getRemainingCount() {
+		return this.shipCount;
+	}
+
+	/**
+	 * Returns the number of enemy ships at the start of the level.
+	 *
+	 * @return Total enemy ships.
+	 */
+	public final int getTotalCount() {
+		return this.nShipsWide * this.nShipsHigh;
+	}
+
+	/**
+	 * Returns the number of enemy ships destroyed in this level.
+	 *
+	 * @return Destroyed enemy ships.
+	 */
+	public final int getDestroyedCount() {
+		return getTotalCount() - this.shipCount;
+	}
+
+	/**
+	 * Returns the points the player can still earn from alive ships.
+	 *
+	 * @return Remaining points.
+	 */
+	public final int getRemainingPoints() {
+		int points = 0;
+		for (List<EnemyShip> column : this.enemyShips)
+			for (EnemyShip ship : column)
+				if (!ship.isDestroyed())
+					points += ship.getPointValue();
+		return points;
 	}
 
 	/**

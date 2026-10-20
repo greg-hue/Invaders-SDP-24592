@@ -29,7 +29,8 @@ public class EnemyShip extends Entity {
 	private boolean isDestroyed;
 	/** Values of the ship, in points, when destroyed. */
 	private int pointValue;
-
+	/** Cooldown between this ship's shots. Null if the ship cannot shoot. */
+	private Cooldown shootingCooldown;
 	/**
 	 * Constructor, establishes the ship's properties.
 	 * 
@@ -148,5 +149,42 @@ public class EnemyShip extends Entity {
 	 */
 	public final boolean isDestroyed() {
 		return this.isDestroyed;
+	}
+	/** Gives this ship a shooting cooldown, without restarting it. */
+	public final void setShootingCooldown(final Cooldown cooldown) {
+		this.shootingCooldown = cooldown;
+	}
+
+	/** Returns this ship's shooting cooldown, so a replacement can inherit it. */
+	public final Cooldown getShootingCooldown() {
+		return this.shootingCooldown;
+	}
+
+	/** True if this ship is alive, allowed to shoot, and its cooldown is over. */
+	public final boolean canShoot() {
+		return !this.isDestroyed
+				&& this.shootingCooldown != null
+				&& this.shootingCooldown.checkFinished();
+	}
+
+	/** Restarts this ship's cooldown after it has fired. */
+	public final void resetShootingCooldown() {
+		if (this.shootingCooldown != null)
+			this.shootingCooldown.reset();
+	}
+
+	/**
+	 * Creates an enemy ship of the given type, for the Level Design system.
+	 *
+	 * @param type      Type of enemy to create (A, B or C).
+	 * @param positionX Initial position in the X axis.
+	 * @param positionY Initial position in the Y axis.
+	 * @return New enemy ship of the given type.
+	 */
+	public static EnemyShip createByType(final EnemyType type,
+			final int positionX, final int positionY) {
+		if (type == null)
+			throw new IllegalArgumentException("Enemy type cannot be null.");
+		return new EnemyShip(positionX, positionY, type.getSpriteType());
 	}
 }

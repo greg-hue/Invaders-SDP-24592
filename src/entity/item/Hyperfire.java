@@ -7,17 +7,18 @@ import engine.DrawManager.SpriteType;
 /**
  * Hyperfire item.
  * Reduces the player's shooting cooldown by 60%
- * for 10 seconds.
+ * for 8 seconds.
  */
 public class Hyperfire extends Item {
 
-    private static final long DURATION_MS = 10_000;
+    private static final long DURATION_MS = 8_000;
 
     /**
      * Creates a Hyperfire item at the given position.
      */
     public Hyperfire(final int positionX, final int positionY) {
-        super(positionX, positionY, 12, 12, SpriteType.Bullet);
+        super(positionX, positionY, 16, 24, SpriteType.Hyperfire);
+
     }
 
     /**

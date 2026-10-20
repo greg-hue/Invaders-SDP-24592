@@ -1,6 +1,8 @@
 # Level JSON Format — Draft v1
 
-Status: local proposal for review; not an implemented or agreed contract.
+Status: draft contract. A shared model/interface prototype is available in
+`src/level/`; concrete JSON IO and gameplay integration are not implemented.
+See `Level_Model_API.md` for the prototype API and remaining decisions.
 
 ## Review questions
 
@@ -9,10 +11,9 @@ contract:
 
 1. Does a rectangular cell grid with mixed enemy types and explicit empty cells
    cover the planned formations, or are arbitrary coordinates also needed?
-2. Review proposal: remove `mode` from the stage file and let gameplay select
-   it, keeping wave data reusable for Endless mode. Confirm this with the mode
-   owners; the sample retains `mode` until that decision is agreed. Is classic
-   mode retained?
+2. This implementation proposes mode-independent definitions and removes
+   `mode` from the model/sample. Review this choice with the mode owners; it is
+   not yet a finalized cross-team decision. Is classic mode retained?
 3. Review proposal: share `LevelDefinition`, `WaveDefinition`, and `EnemyCell`
    through `LevelReader` / `LevelWriter` interfaces. Confirm their package,
    signatures, implementation owners, and connection to the campaign controller.
@@ -31,7 +32,8 @@ Define a shared file format for importing and exporting level definitions. The
 first deliverable is one campaign stage containing an ordered list of waves.
 Import and export must use the same contract before their implementations begin.
 
-One UTF-8 JSON file represents one stage. The file contains design data, not a
+One UTF-8 JSON file represents one stage definition. The gameplay caller
+selects the mode; this proposed format does not contain a `mode` field. The file contains design data, not a
 saved play session. Score, remaining lives, current wave, achievement status,
 and player identity do not belong in this format.
 
@@ -46,10 +48,18 @@ Its identifier and name are sample values, not an official level registration.
 | `classic` | Represent the existing one-formation-per-stage behavior. | Optional mode; if retained, exactly one wave uses the same structure. |
 | `endless` | Continue selecting or generating waves until the run ends. | Deferred pending agreement on repetition, selection, and difficulty rules. |
 
-The current draft accepts `campaign` and provisionally `classic`. It does not
-accept `endless` files yet. Reusing the wave definition in a future endless-mode
-format does not require inventing endless progression rules now. Whether the
-game exposes classic mode remains a team decision.
+The model contains an ordered list of waves without requiring campaign/classic
+membership. Campaign progression uses the list in order; classic mode can
+choose a single-wave definition if retained. Endless mode may reuse wave data,
+but its continuous spawning/selection policy is not implemented by this format.
+Do not claim that the current endless-mode implementation already consumes it.
+
+This removes the previous draft's required `mode` field and moves the
+single-wave classic rule to gameplay. Coordinates are also added explicitly.
+These changes are proposed together in the shared-model PR. No legacy JSON
+reader has been implemented, and no backward-compatible loading is claimed.
+Both reader and writer should implement the same reviewed v1 contract; a legacy
+`mode` field is unknown under this proposal rather than silently ignored.
 
 Array order determines wave order. Clearing all enemies in a wave advances to
 the next wave; it must not clear a multi-wave stage early. Zero remaining player
@@ -57,8 +67,10 @@ lives fails the stage. Stage order and selection belong to the campaign manager
 or a separate campaign index, not file names or the stage ID.
 
 These are proposed integration rules, not behavior supplied by the JSON reader.
-The gameplay owners must agree on lives, bullets, countdowns, and temporary
-effects across wave transitions before integration.
+Issue #16 assigns the loaded-data handoff to hye6k and proposes multi-wave
+progression ownership for rudwnssla123-ux. Confirm the receiving GameScreen
+interface in PR review. Progression owners decide lives, bullets, countdowns,
+and temporary effects across transitions.
 
 ## Fields
 
@@ -69,10 +81,11 @@ All fields below are required. No implicit defaults are applied.
 | `schemaVersion` | Integer | Exactly `1`; reject unsupported versions. |
 | `id` | String | Stable stage ID matching `[a-z0-9]+(?:-[a-z0-9]+)*`. Not proof of official content. |
 | `name` | String | Nonblank display name. |
-| `mode` | String | `campaign` or provisionally `classic`; see mode scope above. |
-| `waves` | Array | At least one wave, played in array order. Exactly one for `classic`. |
+| `waves` | Array | At least one wave, preserved in array order; gameplay decides how to consume the list. |
 | `waves[].id` | String | Same syntax as the stage ID; unique within this stage. |
-| `waves[].formation` | Object | One rectangular grid; cells may be empty. |
+| `waves[].formation` | Object | One rectangular grid and its explicit starting origin; cells may be empty. |
+| `waves[].formation.initialX` | Integer | Proposed required nonnegative starting X coordinate in pixels; matches the stage placement setting from PR #15. |
+| `waves[].formation.initialY` | Integer | Proposed required nonnegative starting Y coordinate in pixels; gameplay additionally checks screen fit and movement alignment. |
 | `waves[].formation.grid` | Array of arrays | At least one row and column, with equal row lengths; at least one occupied cell per wave. |
 | `waves[].formation.grid[][]` | Object or null | An enemy definition, or `null` for an empty cell. |
 | `waves[].formation.grid[][].enemyType` | String | Required on occupied cells: proposed logical enemy identifier. The sample uses provisional `A` / `B` / `C`; final identifiers and supported values require cross-team agreement. |
@@ -149,17 +162,17 @@ implemented. The sample's provisional values are not that registry.
 
 | Name | Proposed responsibility |
 | --- | --- |
-| `LevelDefinition` | Store stage identity, display name, and ordered waves; mode membership remains under review. |
+| `LevelDefinition` | Store stage identity, display name, and ordered waves; no mode or trusted provenance. |
 | `WaveDefinition` | Store wave identity, cell grid, and movement/shooting parameters. |
 | `EnemyCell` | Store one occupied cell's logical enemy identifier and health; a null grid entry preserves an empty cell. |
 | `LevelReader` | Read and validate a file into the agreed level definition. |
 | `LevelWriter` | Write the agreed level definition while preserving wave order and grid positions. |
 
-These names are reviewer suggestions, not implemented classes or agreed method
-signatures. Confirm the package and interaction with the existing
-`campaign.CampaignStageData` before implementation. Reader/writer code handles
-conversion; gameplay owns applying definitions and stage/wave transitions.
-Assign those owners and agree on success/error handling at the team meeting.
+A reviewable prototype now implements these models and interfaces in `level`.
+See `Level_Model_API.md` for proposed signatures and validation boundaries.
+Concrete reader/writer implementations and interaction with
+`campaign.CampaignStageData` are still pending. Confirm the contract through
+issue #16 and PR review before implementing the two sides independently.
 
 ## Existing code mapping and required integration
 
@@ -167,6 +180,7 @@ Assign those owners and agree on success/error handling at the team meeting.
 | --- | --- |
 | `formation.grid[0].length` | Grid width; corresponds to `GameSettings.formationWidth` for a full grid. |
 | `formation.grid.length` | Grid height; corresponds to `GameSettings.formationHeight` for a full grid. |
+| `formation.initialX` / `initialY` | Starting coordinates added to `GameSettings` by PR #15. |
 | `movementBaseFrames` | `GameSettings.baseSpeed` |
 | `shootingIntervalMs` | `GameSettings.shootingFrecuency` (existing spelling) |
 | Cell enemy types and null cells | Requires formation generation changes; current code fills every cell and derives A/B/C from row position. |
@@ -208,7 +222,7 @@ it is not included in the baseline sample or claimed as current game support.
 
 - Use UTF-8 and standard JSON: no comments or trailing commas.
 - Reject missing required fields, wrong types, unknown fields, duplicate object
-  keys, unsupported versions/modes/types, out-of-range values, duplicate
+  keys, unsupported versions/types, out-of-range values, duplicate
   wave IDs, ragged grids, and entirely empty waves. Integer fields do not accept
   strings or fractional values.
 - Validate the entire file before applying any data. On failure, keep the
@@ -223,7 +237,7 @@ it is not included in the baseline sample or claimed as current game support.
 
 ## Official levels and achievements
 
-An imported file is editable by its author. Its `id` or `mode` cannot establish
+An imported file is editable by its author. Its `id` cannot establish
 that it is an official level or that achievements should be awarded. This
 format contains no `official` or `achievementsEnabled` field.
 
@@ -238,7 +252,7 @@ After resolving the review questions above:
 
 1. Agree on how validated stage data reaches the gameplay controller and on
    stage/wave transition behavior.
-2. Divide import/export work with leo using the agreed shared Java data classes
+2. Divide import/export work with 331leo using the agreed shared Java data classes
    and interfaces.
 3. Track endless-mode policy and achievement eligibility as separate decisions;
    do not claim that v1 already supports them.
@@ -254,5 +268,6 @@ After resolving the review questions above:
 - After gameplay integration, verify that wave one does not clear the stage,
   that wave two can complete it, and that zero lives prevents progression.
 
-This draft does not implement the reader/writer, change gameplay, or assert that
-these acceptance checks have already been executed against the game.
+The prototype implements only shared data models and IO interfaces. It does
+not implement JSON reading/writing or change gameplay. The model checks are
+documented separately; the JSON/gameplay acceptance checks above remain pending.

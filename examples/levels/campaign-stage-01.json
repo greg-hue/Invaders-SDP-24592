@@ -2,7 +2,6 @@
   "schemaVersion": 1,
   "id": "campaign-stage-01",
   "name": "First Contact",
-  "mode": "campaign",
   "waves": [
     {
       "id": "wave-01",
@@ -96,7 +95,9 @@
               "health": 1
             }
           ]
-        ]
+        ],
+        "initialX": 20,
+        "initialY": 100
       },
       "movementBaseFrames": 60,
       "shootingIntervalMs": 2000
@@ -157,7 +158,9 @@
               "health": 1
             }
           ]
-        ]
+        ],
+        "initialX": 20,
+        "initialY": 100
       },
       "movementBaseFrames": 50,
       "shootingIntervalMs": 1500

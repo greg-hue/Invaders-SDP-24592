@@ -68,7 +68,7 @@ This project has two remotes and they are used for different purposes.
 
 3. Merge Conditions: Merge into `main` via PR after at least one team member has completed the code review and approval.
 
-4. Branch Deletion: Delete the corresponding working branch immediately after the merge is complete to keep the remote repository tidy.
+4. Branch Deletion: Delete the corresponding working branch immediately after the merge is complete to keep the remote repository tidy. This applies to a merged branch only. A branch whose PR was closed without merging is kept, because its work has not reached `main` and the PR may be reopened on a new base.
 
 ## 3. Commit Rules
 

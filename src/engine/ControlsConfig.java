@@ -7,6 +7,7 @@ public final class ControlsConfig {
     public static final int LEFT = 0;
     public static final int RIGHT = 1;
     public static final int FIRE = 2;
+    public static final int BUFF = 3;
 
     private static final Preferences PREFS =
             Preferences.userNodeForPackage(ControlsConfig.class);
