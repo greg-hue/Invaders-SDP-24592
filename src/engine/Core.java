@@ -79,9 +79,13 @@ public final class Core {
 	 * Test implementation.
 	 *
 	 * @param args
-	 *             Program args, ignored.
+	 *             Pass --demo to start the guided presentation.
 	 */
 	public static void main(final String[] args) {
+		if (java.util.Arrays.asList(args).contains("--demo")) {
+			DemoRunner.run();
+			return;
+		}
 		try {
 			LOGGER.setUseParentHandlers(false);
 
@@ -452,6 +456,13 @@ public final class Core {
 
 	public static RecordsService getRecordsService() {
 		return recordsService;
+	}
+
+	/** Services owned by the isolated presentation session. */
+	static void setDemoServices(final RecordsService records,
+			final ShopController shop) {
+		recordsService = records;
+		shopController = shop;
 	}
 
 	private static void registerRecordsShutdownHook(final RecordsService service) {

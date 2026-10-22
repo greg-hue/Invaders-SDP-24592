@@ -23,6 +23,8 @@ public class TitleScreen extends Screen {
     /** Time between changes in user selection. */
     private Cooldown selectionCooldown;
     private boolean wasMousePressed = false;
+    private int lastMouseX = -1;
+    private int lastMouseY = -1;
 
     /**
      * Constructor, establishes the properties of the screen.
@@ -68,7 +70,9 @@ public class TitleScreen extends Screen {
         int hoveredOption = drawManager.getMenuOptionAt(this, mouseX, mouseY);
 
         // Update selection when hovering over a different option.
-        if (hoveredOption != -1 && hoveredOption != this.returnCode) {
+        boolean mouseMoved = mouseX != lastMouseX || mouseY != lastMouseY;
+        lastMouseX = mouseX; lastMouseY = mouseY;
+        if (mouseMoved && hoveredOption != -1 && hoveredOption != this.returnCode) {
             this.returnCode = hoveredOption;
             AudioManager.playSFX("audio/sfx/menu_move.wav");
         }

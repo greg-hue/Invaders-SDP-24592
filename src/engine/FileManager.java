@@ -68,7 +68,16 @@ public final class FileManager {
 	 * @param filename file name to resolve
 	 * @return Path pointing to the file in the application storage directory
 	 */
+	private static Path sessionStorageDirectory;
+
+	/** Optional storage root owned by the separate demo process. */
+	static void setSessionStorageDirectory(final Path directory) {
+		sessionStorageDirectory = directory;
+	}
+
 	static Path resolveStoragePath(final String filename) {
+		if (sessionStorageDirectory != null)
+			return sessionStorageDirectory.resolve(filename);
 		try {
 			Path codePath = Paths.get(FileManager.class.getProtectionDomain()
 					.getCodeSource().getLocation().toURI());

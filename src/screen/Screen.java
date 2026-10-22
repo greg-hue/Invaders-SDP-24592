@@ -19,6 +19,15 @@ import engine.Starfield;
  * 
  */
 public class Screen {
+	private demo.DemoPlayback presentation;
+
+	public final void setPresentation(final demo.DemoPlayback playback) {
+		this.presentation = playback;
+	}
+
+	public final demo.DemoPlayback getPresentation() {
+		return this.presentation;
+	}
 	
 	/** Milliseconds until the screen accepts user input. */
 	private static final int INPUT_DELAY = 1000;
@@ -90,6 +99,8 @@ public class Screen {
 		long previousTime = System.nanoTime();
 
 		while (this.isRunning) {
+			if (this.presentation != null && !this.presentation.beforeFrame(this))
+				break;
 			long time = System.currentTimeMillis();
 
 			long currentTime = System.nanoTime();

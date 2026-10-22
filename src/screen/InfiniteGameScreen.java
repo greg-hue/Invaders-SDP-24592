@@ -36,6 +36,12 @@ import entity.ZigzagEnemyShip;
  * from the top of the screen until the player runs out of lives or quits.
  */
 public class InfiniteGameScreen extends Screen {
+	/** Prepared ending for the presentation's results/records sequence. */
+	public final void endPresentationRun() {
+		if (getPresentation() == null)
+			throw new IllegalStateException("Not a presentation scene.");
+		this.lives = 0;
+	}
 
 	/** Height of the interface separation line. */
 	private static final int SEPARATION_LINE_HEIGHT = 40;

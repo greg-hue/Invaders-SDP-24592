@@ -22,6 +22,8 @@ public class ShipSelectionScreen extends Screen {
     private int selectedIndex = 0;
     /** Tracks the previous left mouse button state. */
     private boolean wasMousePressed = false;
+    private int lastMouseX = -1;
+    private int lastMouseY = -1;
 
     /**
      * Constructor, establishes the properties of the screen.
@@ -57,7 +59,9 @@ public class ShipSelectionScreen extends Screen {
                 this, this.shipTypes, mouseX, mouseY);
 
         // Update the selected ship when hovering over a valid option.
-        if (hoveredIndex != -1 && hoveredIndex != this.selectedIndex) {
+        boolean mouseMoved = mouseX != lastMouseX || mouseY != lastMouseY;
+        lastMouseX = mouseX; lastMouseY = mouseY;
+        if (mouseMoved && hoveredIndex != -1 && hoveredIndex != this.selectedIndex) {
             this.selectedIndex = hoveredIndex;
         }
 

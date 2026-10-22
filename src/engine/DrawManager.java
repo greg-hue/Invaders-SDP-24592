@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import screen.Screen;
+import screen.DemoPanelScreen;
 import hud.FloatingScoreHud;
 import currency.PlayerAssetsState;
 import currency.ShopCatalog.Category;
@@ -1444,7 +1445,8 @@ public final class DrawManager {
     }
 
     public void initDrawing(final Screen screen) {
-        backBuffer = new BufferedImage(screen.getWidth(), screen.getHeight(),
+        backBuffer = new BufferedImage(screen.getWidth(), screen.getHeight()
+                + (screen.getPresentation() == null ? 0 : demo.DemoPlayback.FOOTER_HEIGHT),
                 BufferedImage.TYPE_INT_RGB);
 
         graphics = frame == null ? null : frame.getGraphics();
@@ -1464,6 +1466,8 @@ public final class DrawManager {
 
     public void completeDrawing(final Screen screen) {
         try {
+            if (screen.getPresentation() != null)
+                screen.getPresentation().drawFooter(backBufferGraphics, screen);
             if (graphics != null)
                 graphics.drawImage(backBuffer, frame.getInsets().left,
                         frame.getInsets().top, frame);
@@ -1472,6 +1476,48 @@ public final class DrawManager {
             if (graphics != null)
                 graphics.dispose();
         }
+    }
+
+    public void drawPresentationPanel(Screen screen, String title, List<String> lines,
+            List<String> buttons, int selected) {
+        backBufferGraphics.setFont(new Font("SansSerif", Font.BOLD, 18));
+        backBufferGraphics.setColor(Color.WHITE);
+        backBufferGraphics.drawString(title, 16, 30);
+        backBufferGraphics.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        int y = 57;
+        for (String line : lines) {
+            String row = "";
+            for (String word : line.split(" ")) {
+                String next = row.isEmpty() ? word : row + " " + word;
+                if (!row.isEmpty() && backBufferGraphics.getFontMetrics().stringWidth(next) > screen.getWidth() - 32) {
+                    backBufferGraphics.drawString(row, 16, y); y += 16; row = word;
+                } else row = next;
+            }
+            backBufferGraphics.drawString(row, 16, y); y += 21;
+        }
+        for (int i = 0; i < buttons.size(); i++) {
+            java.awt.Rectangle bounds = DemoPanelScreen.buttonBounds(screen, buttons.size(), i);
+            backBufferGraphics.setColor(i == selected ? new Color(40, 110, 80) : new Color(36, 64, 87));
+            backBufferGraphics.fillRoundRect(bounds.x, bounds.y, bounds.width, bounds.height, 8, 8);
+            backBufferGraphics.setColor(Color.WHITE);
+            backBufferGraphics.drawString(buttons.get(i), bounds.x + 9, bounds.y + 20);
+        }
+    }
+
+    public void drawPresentationObstacle(Entity obstacle) {
+        backBufferGraphics.setColor(Color.ORANGE);
+        backBufferGraphics.fillRect(obstacle.getPositionX(), obstacle.getPositionY(), obstacle.getWidth(), obstacle.getHeight());
+        backBufferGraphics.setColor(Color.BLACK);
+        backBufferGraphics.drawLine(obstacle.getPositionX() + 3, obstacle.getPositionY() + 3,
+                obstacle.getPositionX() + 14, obstacle.getPositionY() + 14);
+        backBufferGraphics.drawLine(obstacle.getPositionX() + 14, obstacle.getPositionY() + 3,
+                obstacle.getPositionX() + 3, obstacle.getPositionY() + 14);
+    }
+
+    public void drawPresentationCombatText(Screen screen, String text) {
+        backBufferGraphics.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        backBufferGraphics.setColor(Color.WHITE);
+        backBufferGraphics.drawString(text, 10, 58);
     }
 
     public void drawNameInput(final Screen screen, final char[] name,

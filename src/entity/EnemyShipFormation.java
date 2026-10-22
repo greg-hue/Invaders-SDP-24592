@@ -66,6 +66,22 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 
 	/** Current movement pattern. */
     private MovementPattern movementPattern = MovementPattern.DIAGONAL_BOUNCE;
+    private boolean presentationMovement;
+    private int presentationStage = 1;
+    private int activeBulletSpeed = BULLET_SPEED;
+
+    /** Select existing patterns explicitly for prepared presentation scenes. */
+    public final void configurePresentationMovement(int stage) {
+        if (stage < 1) throw new IllegalArgumentException("Stage must be positive");
+        presentationMovement = true;
+        presentationStage = stage;
+        movementPattern = MovementPattern.values()[(stage - 1) % 3];
+    }
+
+    public final void setPresentationBulletSpeed(int speed) {
+        if (speed <= 0) throw new IllegalArgumentException("Bullet speed must be positive");
+        activeBulletSpeed = speed;
+    }
 	/** Horizontal direction of the wave: 1 = right, -1 = left. */
 	private int waveDirection = 1;
 	/** Current phase of the wave. */
@@ -375,6 +391,8 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
         if (this.movementPattern == MovementPattern.DIAGONAL_BOUNCE) {
             movementDelay = 2;
         }
+        if (this.presentationMovement)
+            movementDelay = Math.max(2, this.movementSpeed / (3 + this.presentationStage));
 
         if (movementInterval >= movementDelay) {
             movementInterval = 0;
@@ -544,7 +562,7 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 		int enemyY = shooter.getPositionY();
 
 		if (player == null) {
-			bullets.add(BulletPool.getBullet(enemyX, enemyY, BULLET_SPEED,
+			bullets.add(BulletPool.getBullet(enemyX, enemyY, activeBulletSpeed,
 					Bullet.Owner.ENEMY));
 			return;
 		}
@@ -557,10 +575,10 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 		double distance = Math.sqrt(dx * dx + dy * dy);
 
 		int speedX = 0;
-		int speedY = BULLET_SPEED;
+		int speedY = activeBulletSpeed;
 		if (distance > 0) {
-			speedX = (int) Math.round((dx / distance) * BULLET_SPEED);
-			speedY = (int) Math.round((dy / distance) * BULLET_SPEED);
+			speedX = (int) Math.round((dx / distance) * activeBulletSpeed);
+			speedY = (int) Math.round((dy / distance) * activeBulletSpeed);
 		}
 
 		// An aimed shot can travel sideways or upwards, so the owner is set

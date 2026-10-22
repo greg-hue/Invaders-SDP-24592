@@ -48,6 +48,20 @@ public class Frame extends JFrame {
 		getContentPane().addMouseMotionListener(Core.getInputManager());
 	}
 
+	/** Exact client dimensions for the presentation, including its footer. */
+	public final void setPresentationSize(final int contentWidth, final int contentHeight) {
+		java.awt.Rectangle usable = java.awt.GraphicsEnvironment
+				.getLocalGraphicsEnvironment().getMaximumWindowBounds();
+		Insets borders = getInsets();
+		getContentPane().setPreferredSize(new java.awt.Dimension(
+				Math.min(contentWidth, usable.width - borders.left - borders.right),
+				Math.min(contentHeight, usable.height - borders.top - borders.bottom)));
+		pack();
+		this.width = getContentPane().getWidth();
+		this.height = getContentPane().getHeight();
+		setLocationRelativeTo(null);
+	}
+
 	/**
 	 * Sets current screen.
 	 * 

@@ -37,6 +37,16 @@ Register your team by adding one row to the table below and submitting the chang
 
 To run the baseline in IntelliJ IDEA, mark `src` as **Sources Root** and `res` as **Resources Root**, then run `engine.Core`. The resource directory must be on the runtime classpath: the game loads `graphics`, `scores`, and `font.ttf` from its root. Installing the font in your operating system does not make it available to the game.
 
+## Main Project Demo
+
+Run `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-game.ps1 -Demo`
+for a presentation with manual gameplay and clickable Back/Restart/Next buttons. In an
+IDE, run `engine.Core` with the program argument `--demo`.
+See the [presentation guide](docs/Main_Project_Demo.md) for the scenario,
+presenter shortcuts, team coverage, persistent rehearsal profiles, and verification.
+Use `-DemoProfile .\out\rehearsal-01` to start a fresh rehearsal profile; reuse the
+same path on restart to demonstrate persistence. The normal game profile is separate.
+
 ## Attribution and Licensing
 
 This course project is based on [RobertoIA/Invaders](https://github.com/RobertoIA/Invaders). The upstream repository does not currently declare an open-source license. This repository therefore does not assert a new open-source license over the upstream code or third-party assets. Any permission or licensing terms confirmed by the relevant rights holders should be documented here before redistribution beyond the permissions provided through GitHub.

@@ -64,6 +64,92 @@ import entity.item.TwinCanon;
  *
  */
 public class GameScreen extends Screen {
+	/** Ship used to carry a campaign forward through presentation navigation. */
+	public final ShipType getShipType() {
+		return this.shipType;
+	}
+	private boolean preparedPresentation;
+    private demo.DemoCombatConfig presentationConfig;
+    private Entity presentationObstacle;
+    private boolean presentationSlowWasActive;
+    private shop.ItemUseController purchasedItems;
+    private boolean purchaseKeyHeld;
+    private String purchaseFeedback = "B: use one purchased shield";
+
+    public final void configurePresentation(final demo.DemoCombatConfig config) {
+        this.presentationConfig = config;
+    }
+
+	public final void setPreparedPresentation(final boolean enabled) {
+		this.preparedPresentation = enabled;
+	}
+
+    private void updatePresentationAdapters() {
+        if (this.presentationConfig.adaptiveProjectiles)
+            this.enemyShipFormation.setPresentationBulletSpeed(this.playerStatus.getLives() == 1 ? 2 : 4);
+        if (this.purchasedItems != null) {
+            boolean down = inputManager.isKeyDown(java.awt.event.KeyEvent.VK_B);
+            if (down && !this.purchaseKeyHeld && this.inputDelay.checkFinished()) {
+                boolean conflict = ControlsConfig.getKey(ControlsConfig.LEFT) == KeyEvent.VK_B
+                        || ControlsConfig.getKey(ControlsConfig.RIGHT) == KeyEvent.VK_B
+                        || ControlsConfig.getKey(ControlsConfig.FIRE) == KeyEvent.VK_B;
+                this.purchaseFeedback = conflict ? "B is bound: rebind first"
+                        : "Use: " + this.purchasedItems.tryUse(demo.DemoProfile.SHIELD);
+            }
+            this.purchaseKeyHeld = down;
+        }
+        if (this.presentationObstacle != null && this.inputDelay.checkFinished() && !this.levelFinished) {
+            this.presentationObstacle.setPositionY(this.presentationObstacle.getPositionY() + 3);
+            if (!this.ship.isDestroyed() && checkCollision(this.ship, this.presentationObstacle)) {
+                entity.PlayerStatus.SlowApplicationResult result = this.playerStatus.applySlow(this.ship);
+                this.recordsEvents.publish(new demo.DemoStatusEvent("Obstacle slow: " + result));
+                this.presentationObstacle = null;
+            } else if (this.presentationObstacle.getPositionY() > this.height) this.presentationObstacle = null;
+        }
+        boolean slowed = this.playerStatus.isSlowActive();
+        if (this.presentationSlowWasActive && !slowed)
+            this.recordsEvents.publish(new demo.DemoStatusEvent("Slow ended: normal movement restored"));
+        this.presentationSlowWasActive = slowed;
+    }
+
+	/** Prepared presentation cues are unavailable in a normal game. */
+	public final void demonstrate(final demo.DemoAction action) {
+		if (getPresentation() == null || this.ship == null)
+			throw new IllegalStateException("Presentation scene is not initialized.");
+		int x = this.ship.getPositionX();
+		int y = this.ship.getPositionY();
+		switch (action) {
+		case SHIELD: this.itemManager.spawnItem(new ShieldItem(x, y)); break;
+		case TWIN_CANNON:
+			this.itemManager.getBuffManager().addBuff(new TwinCanon(x, y), this.ship);
+			break;
+		case HYPERFIRE: this.itemManager.spawnItem(new Hyperfire(x, y)); break;
+		case CHAMELEON: this.itemManager.spawnItem(new ChameleonHull(x, y)); break;
+		case GRENADE: this.itemManager.spawnItem(new ClusterGrenadeItem(x, y)); break;
+		case ANNIHILATOR:
+			this.itemManager.spawnItem(new AnnihilatorItem(x, y, this.annihilator));
+			break;
+		case DAMAGE: damagePlayer(1, "Prepared demo hit"); break;
+		case EXTRA_LIFE: this.playerStatus.gainLife(); break;
+		case SLOW: this.playerStatus.applySlow(this.ship); break;
+        case STATUS_SHIELD: this.playerStatus.activateShield(); break;
+        case OBSTACLE:
+            this.presentationObstacle = new Entity(x + this.ship.getWidth() / 2 - 9, 85, 18, 18, java.awt.Color.ORANGE);
+            break;
+		case BOSS_PHASE_TWO:
+		case BOSS_PHASE_THREE:
+			Boss boss = this.bossManager.getBoss();
+			if (boss != null && !boss.isDefeated()) {
+				int target = (int) (boss.getMaxHealth()
+						* (action == demo.DemoAction.BOSS_PHASE_TWO ? 0.50 : 0.20));
+				if (boss.getCurrentHealth() > target)
+					damageBoss(boss.getCurrentHealth() - target);
+			}
+			break;
+		case END_RUN: damagePlayer(this.playerStatus.getLives(), "Prepared demo ending"); break;
+		default: throw new IllegalArgumentException("Unknown demo action.");
+		}
+	}
 
 	/** Milliseconds until the screen accepts user input. */
 	private static final int INPUT_DELAY = 6000;
@@ -394,9 +480,25 @@ public class GameScreen extends Screen {
 
 		enemyShipFormation = new EnemyShipFormation(this.gameSettings);
 		enemyShipFormation.attach(this);
+        if (this.presentationConfig != null && this.presentationConfig.movementStage > 0)
+            this.enemyShipFormation.configurePresentationMovement(this.presentationConfig.movementStage);
 		this.ship = new Ship(this.width / 2, this.height - 30, this.shipType);
 		this.ship.setBaseColor(ShipCustomization.getColor());
 		this.itemManager = new ItemManager(this.height);
+        if (this.presentationConfig != null && this.presentationConfig.purchasedItems != null) {
+            java.util.Map<String, currency.ConsumableActivation> adapters = new java.util.HashMap<>();
+            adapters.put(demo.DemoProfile.SHIELD, new currency.ConsumableActivation() {
+                public currency.ItemUseResult validate() {
+                    return ship.isDestroyed() ? currency.ItemUseResult.INVALID_CONTEXT
+                            : ship.isShieldActive() ? currency.ItemUseResult.ALREADY_ACTIVE : currency.ItemUseResult.SUCCESS;
+                }
+                public currency.ItemUseResult activate() {
+                    itemManager.getBuffManager().addBuff(new ShieldItem(0, 0), ship);
+                    return currency.ItemUseResult.SUCCESS;
+                }
+            });
+            this.purchasedItems = this.presentationConfig.purchasedItems.createItemUseController(adapters);
+        }
 
 		this.shieldDroppedThisLevel = false;
 		this.chameleonDroppedThisLevel = false;
@@ -435,9 +537,16 @@ public class GameScreen extends Screen {
 		// The boss appears only on boss stages.
 		if (isBossLevel(this.level))
 			this.bossManager.spawn(new BossSpawnRequest(
-					Boss.BossType.BOSS_A, this.width / 2 - Boss.WIDTH / 2, 78,
+					this.presentationConfig != null && this.presentationConfig.bossType != null
+                            ? this.presentationConfig.bossType : Boss.BossType.BOSS_A,
+                    this.width / 2 - Boss.WIDTH / 2, 78,
 					this.level, 0));
 		this.bossExplosionCooldown = Core.getCooldown(BOSS_EXPLOSION_TIME);
+        if (this.presentationConfig != null && this.presentationConfig.bossHealth > 0
+                && this.bossManager.getBoss() != null) {
+            Boss activeBoss = this.bossManager.getBoss();
+            damageBoss(Math.max(0, activeBoss.getCurrentHealth() - this.presentationConfig.bossHealth));
+        }
 
 		// Special input delay / countdown.
 		this.gameStartTime = System.currentTimeMillis();
@@ -490,6 +599,7 @@ public class GameScreen extends Screen {
 		// Outside the input-delay check: a shield that runs out has to be
 		// announced even while the level is finishing.
 		this.playerStatus.update();
+        if (this.presentationConfig != null) updatePresentationAdapters();
 
 		if (this.inputDelay.checkFinished() && !this.levelFinished) {
 			if (this.runSession != null)
@@ -613,7 +723,7 @@ public class GameScreen extends Screen {
 
 		this.ship.update();
 
-        if (this.inputDelay.checkFinished() && !this.levelFinished)
+        if (!this.preparedPresentation && this.inputDelay.checkFinished() && !this.levelFinished)
             updateTwinCanonItem();
 
         if (this.inputDelay.checkFinished() && !this.levelFinished) {
@@ -704,6 +814,7 @@ public class GameScreen extends Screen {
 	 */
 	private void draw() {
 		drawManager.initDrawing(this);
+        if (this.presentationObstacle != null) drawManager.drawPresentationObstacle(this.presentationObstacle);
 
 		if (this.annihilator.isCharging() || this.annihilator.isFiring())
 			drawManager.drawOrbitalAnnihilator(
@@ -778,6 +889,15 @@ public class GameScreen extends Screen {
 					this.annihilator.getChargeProgress());
 
 		drawManager.drawHorizontalLine(this, SEPARATION_LINE_HEIGHT - 1);
+        if (this.presentationConfig != null) {
+            Boss activeBoss = this.bossManager.getBoss();
+            String details = activeBoss == null ? "" : activeBoss.getType() + " HP "
+                    + activeBoss.getCurrentHealth() + "/" + activeBoss.getMaxHealth() + " | Phase " + activeBoss.getPhase();
+            if (this.purchasedItems != null) details = this.purchaseFeedback + " | Stock "
+                    + this.presentationConfig.purchasedItems.snapshot().getItemQuantities().getOrDefault(demo.DemoProfile.SHIELD, 0)
+                    + " | Cr " + this.presentationConfig.purchasedItems.snapshot().getBalance();
+            drawManager.drawPresentationCombatText(this, details);
+        }
 
 		// Countdown to game start.
 		if (!this.inputDelay.checkFinished()) {
@@ -864,7 +984,7 @@ public class GameScreen extends Screen {
 						recyclable.add(bullet);
 
 						// --- DROP DU BOUCLIER ---
-						if (!this.shieldDroppedThisLevel) {
+						if (!this.preparedPresentation && !this.shieldDroppedThisLevel) {
 							boolean shouldDrop = (Math.random() < 0.15)
 									|| (this.enemyShipFormation.isEmpty());
 							if (shouldDrop) {
@@ -1067,6 +1187,15 @@ public class GameScreen extends Screen {
 		this.bossManager.sync();
 		if (boss.isDefeated())
 			this.bossExplosionCooldown.reset();
+        if (boss.isDefeated() && this.presentationConfig != null && this.presentationConfig.bossFeedback) {
+            this.particleSystem.spawnPlayerExplosion(boss.getPositionX(), boss.getPositionY());
+            AudioManager.playSFX("audio/sfx/countdown_go.wav");
+            this.shipsDestroyed++;
+            this.score += 500;
+            if (this.runSession != null)
+                this.recordsEvents.publish(new EnemyDefeatedEvent(this.runSession.getRunId(),
+                        this.runSession.getRunId() + ":boss:" + this.level));
+        }
 	}
 
 	/**
@@ -1219,6 +1348,7 @@ public class GameScreen extends Screen {
 	}
 
 	private void tryDropChameleonHull(final EnemyShip enemy) {
+		if (this.preparedPresentation) return;
 		if (!this.chameleonDroppedThisLevel
 				&& this.level >= ChameleonHull.REQUIRED_LEVEL
 				&& !this.levelFinished
@@ -1338,6 +1468,7 @@ public class GameScreen extends Screen {
      *            Destroyed enemy ship.
      */
     private void tryDropGrenade(final EnemyShip enemyShip) {
+        if (this.preparedPresentation) return;
         if (!this.levelFinished
                 && this.grenadeDropsThisLevel < MAX_GRENADE_DROPS_PER_LEVEL
                 && Math.random() < GRENADE_DROP_CHANCE) {
@@ -1356,6 +1487,7 @@ public class GameScreen extends Screen {
      *            Destroyed enemy ship.
      */
     private void tryDropAnnihilator(final EnemyShip enemyShip) {
+        if (this.preparedPresentation) return;
         if (!this.annihilatorDroppedThisLevel
                 && !this.levelFinished
                 && this.level == OrbitalAnnihilator.REQUIRED_LEVEL
@@ -1377,6 +1509,7 @@ public class GameScreen extends Screen {
      *            Destroyed bonus ship.
      */
     private void tryDropHyperfire(final EnemyShip bonusShip) {
+        if (this.preparedPresentation) return;
         if (!this.hyperfireDroppedThisLevel && !this.levelFinished
                 && bonusShip != null) {
             this.itemManager.spawnItem(new Hyperfire(
