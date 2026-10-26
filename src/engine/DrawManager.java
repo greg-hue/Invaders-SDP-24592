@@ -1858,7 +1858,7 @@ public final class DrawManager {
         return -1;
     }
 
-    
+
 /**
  * Returns the volume option under the mouse, or -1 if no bar is hovered.
  * 0 = BGM, 1 = SFX.

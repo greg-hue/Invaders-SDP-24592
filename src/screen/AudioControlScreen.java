@@ -160,7 +160,7 @@ private int draggedVolumeOption = -1;
 	 * Selects the option under the mouse. Clicking the mute option toggles
 	 * the mute state.
 	 */
-	
+
 /**
  * Handles mouse selection, volume dragging, and mute clicks.
  */
