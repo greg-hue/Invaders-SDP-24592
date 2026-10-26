@@ -83,6 +83,7 @@ public class GameplaySettingsScreen extends Screen {
             AudioManager.playSFX("audio/sfx/menu_back.wav");
             returnCode = 4;
             isRunning = false;
+            AudioManager.playSFX("audio/sfx/menu_back.wav");
         }
     }
 
@@ -90,10 +91,10 @@ public class GameplaySettingsScreen extends Screen {
      * Saves the selected difficulty and returns to the settings menu.
      */
     private void confirmDifficulty() {
-        GameplayConfig.setDifficulty(selectedOption);
-        AudioManager.playSFX("audio/sfx/menu_back.wav");
-        returnCode = 4;
-        isRunning = false;
+    GameplayConfig.setDifficulty(selectedOption);
+    returnCode = 4;
+    isRunning = false;
+    AudioManager.playSFX("audio/sfx/menu_select.wav");
     }
 
     private void draw() {

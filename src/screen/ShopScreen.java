@@ -34,6 +34,7 @@ public class ShopScreen extends Screen {
     private boolean confirmHeld;
     private boolean backHeld;
     private boolean retryHeld;
+    private boolean mouseHeld;
 
     public ShopScreen(int width, int height, int fps, ShopController controller) {
         super(validateArguments(width, height, fps, controller), height, fps);
@@ -114,10 +115,23 @@ public class ShopScreen extends Screen {
         confirmHeld = confirm;
         backHeld = back;
         retryHeld = retry;
+        boolean mousePressed = inputManager.isMousePressed();
+        boolean mouseClick = mousePressed && !mouseHeld;
+        mouseHeld = mousePressed;
         if (!acceptsInput) {
             return;
         }
 
+        if (isMouseOverBack()) {
+            if (selectedSection != 2 || selectedAction != 0) {
+                selectedSection = 2;
+                selectedAction = 0;
+            }
+            if (mouseClick) {
+                leaveShop();
+                return;
+            }
+        }
         if (controller.getSaveStatus() != SaveStatus.FAILED) selectedAction = 0;
         if (leave) {
             leaveShop();
@@ -137,6 +151,15 @@ public class ShopScreen extends Screen {
                 buySelectedProduct();
             }
         }
+    }
+
+    /** Mouse hitbox matching the Back label drawn at x=31, y=height-96. */
+    private boolean isMouseOverBack() {
+        int mouseX = inputManager.getMouseX();
+        int mouseY = inputManager.getMouseY();
+        int actionsY = getHeight() - 96;
+        return mouseX >= 24 && mouseX <= 160
+                && mouseY >= actionsY - 18 && mouseY <= actionsY + 5;
     }
 
     private void moveSection(int direction) {

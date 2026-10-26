@@ -4,6 +4,7 @@ import java.awt.event.KeyEvent;
 
 import audio.AudioManager;
 import records.RecordsService;
+import audio.AudioManager;
 
 /** Local browsing page for completed runs and achievements. */
 public final class PlayerRecordsScreen extends Screen {
@@ -37,6 +38,7 @@ public final class PlayerRecordsScreen extends Screen {
             AudioManager.playSFX("audio/sfx/menu_back.wav");
             this.returnCode = 1;
             this.isRunning = false;
+            AudioManager.playSFX("audio/sfx/menu_back.wav");
         } else if (this.inputManager.isKeyDown(KeyEvent.VK_LEFT)
                 || this.inputManager.isKeyDown(KeyEvent.VK_RIGHT)) {
             this.tab = 1 - this.tab;

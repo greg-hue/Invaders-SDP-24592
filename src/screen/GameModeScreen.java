@@ -12,6 +12,7 @@ public class GameModeScreen extends Screen { // Implementation of the game mode 
 
     private int selected;
     private Cooldown selectionCooldown;
+    private boolean wasMousePressed;
 
     public GameModeScreen(final int width, final int height, final int fps) {
         super(width, height, fps);
@@ -29,18 +30,32 @@ public class GameModeScreen extends Screen { // Implementation of the game mode 
     protected final void update() {
         super.update();
 
-        draw();
+        if (this.inputDelay.checkFinished()) {
+            int mouseOption = getMouseOption();
+            if (mouseOption != -1 && mouseOption != this.selected) {
+                this.selected = mouseOption;
+                AudioManager.playSFX("audio/sfx/menu_move.wav");
+            }
+
+            boolean mousePressed = inputManager.isMousePressed();
+            boolean newMouseClick = mousePressed && !wasMousePressed;
+            wasMousePressed = mousePressed;
+            if (newMouseClick && mouseOption != -1) {
+                chooseOption();
+            }
+        } else {
+            wasMousePressed = inputManager.isMousePressed();
+        }
+
         if (this.selectionCooldown.checkFinished()
                 && this.inputDelay.checkFinished()) {
-
             if (inputManager.isKeyDown(KeyEvent.VK_UP)
                     || inputManager.isKeyDown(KeyEvent.VK_W)) {
                 this.selected = this.selected == 0 ? NUM_CHOICES - 1
                         : this.selected - 1;
                 this.selectionCooldown.reset();
-                AudioManager.playSFX("audio/sfx/menu_move.wav");   // 추가 (두 곳 모두)
-            }
-            if (inputManager.isKeyDown(KeyEvent.VK_DOWN)
+                AudioManager.playSFX("audio/sfx/menu_move.wav");
+            } else if (inputManager.isKeyDown(KeyEvent.VK_DOWN)
                     || inputManager.isKeyDown(KeyEvent.VK_S)) {
                 this.selected = (this.selected + 1) % NUM_CHOICES;
                 this.selectionCooldown.reset();
@@ -68,6 +83,39 @@ public class GameModeScreen extends Screen { // Implementation of the game mode 
                 AudioManager.playSFX("audio/sfx/menu_back.wav");
             }
         }
+        draw();
+    }
+
+    /** Returns the menu row under the mouse, or -1 when outside the rows. */
+    private int getMouseOption() {
+        int mouseX = inputManager.getMouseX();
+        int mouseY = inputManager.getMouseY();
+        int centerX = this.getWidth() / 2;
+        int firstY = this.getHeight() / 3 + 60;
+        for (int i = 0; i < NUM_CHOICES; i++) {
+            int rowY = firstY + i * 40;
+            if (mouseX >= centerX - 180 && mouseX <= centerX + 180
+                    && mouseY >= rowY - 22 && mouseY <= rowY + 12) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private void chooseOption() {
+        if (this.selected == 2) {
+            goBack();
+        } else {
+            this.returnCode = this.selected == 0 ? 8 : 2;
+            AudioManager.playSFX("audio/sfx/menu_select.wav");
+            this.isRunning = false;
+        }
+    }
+
+    private void goBack() {
+        this.returnCode = 1;
+        AudioManager.playSFX("audio/sfx/menu_back.wav");
+        this.isRunning = false;
     }
 
     public final int getSelectedGameMode() {

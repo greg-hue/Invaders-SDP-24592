@@ -61,8 +61,9 @@ public class ShipSelectionScreen extends Screen {
 
         // Update the selected ship when hovering over a valid option.
         if (hoveredIndex != -1 && hoveredIndex != this.selectedIndex) {
-            this.selectedIndex = hoveredIndex;
-        }
+    this.selectedIndex = hoveredIndex;
+    AudioManager.playSFX("audio/sfx/menu_move.wav");
+    }
 
         // Play the move sound only when the mouse enters a different option.
         if (hoveredIndex != -1 && hoveredIndex != this.lastHoveredIndex) {

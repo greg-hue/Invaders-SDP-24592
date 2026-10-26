@@ -86,6 +86,7 @@ public class SettingsScreen extends Screen {
             AudioManager.playSFX("audio/sfx/menu_back.wav");
             this.returnCode = 1;
             this.isRunning = false;
+            AudioManager.playSFX("audio/sfx/menu_back.wav");
         }
     }
 
@@ -108,13 +109,13 @@ public class SettingsScreen extends Screen {
             this.returnCode = 1;
             break;
         }
-        if(this.selectedOption == BACK_OPTION){
+                this.isRunning = false;
+
+        if (this.selectedOption == BACK_OPTION) {
             AudioManager.playSFX("audio/sfx/menu_back.wav");
-        }
-        else {
+        } else {
             AudioManager.playSFX("audio/sfx/menu_select.wav");
         }
-        this.isRunning = false;
     }
 
     private void draw() {

@@ -94,6 +94,7 @@ public class ControlsSettingsScreen extends Screen {
             AudioManager.playSFX("audio/sfx/menu_back.wav");
             this.returnCode = 4;
             this.isRunning = false;
+            AudioManager.playSFX("audio/sfx/menu_back.wav");
         }
     }
 
@@ -143,13 +144,14 @@ public class ControlsSettingsScreen extends Screen {
      */
     private void confirmSelectedOption() {
         if (this.selectedOption == BACK_OPTION) {
-            AudioManager.playSFX("audio/sfx/menu_back.wav");
-            this.returnCode = 4;
-            this.isRunning = false;
-        } else {
-            inputManager.clearLastPressedKey();
-            this.waitingForKey = true;
-        }
+    this.returnCode = 4;
+    this.isRunning = false;
+    AudioManager.playSFX("audio/sfx/menu_back.wav");
+    } else {
+    inputManager.clearLastPressedKey();
+    this.waitingForKey = true;
+    AudioManager.playSFX("audio/sfx/menu_select.wav");
+    }
         this.selectionCooldown.reset();
     }
 
