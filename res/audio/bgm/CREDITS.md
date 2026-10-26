@@ -39,3 +39,9 @@ Third-party background music used in this project and their licenses.
 - Arrangement and Loop: Johan Brodd
 - Source: https://opengameart.org/content/bumblebee-loop
 - License: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
+
+## music_shop
+
+- Original: "Stereotypical 90's space shooter music" by Jan125
+- Source: https://opengameart.org/content/stereotypical-90s-space-shooter-music
+- Licence: OGA-BY 3.0 (https://opengameart.org/content/oga-by-30-faq)

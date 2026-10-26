@@ -4,6 +4,7 @@ import entity.Ship;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import audio.AudioManager;
 
 public class BuffManager {
 
@@ -45,6 +46,10 @@ public class BuffManager {
             Map.Entry<Item, Long> entry = iterator.next();
 
             if (currentTime >= entry.getValue()) {
+                if (entry.getKey() instanceof ShieldItem)
+                    AudioManager.playSFX("audio/sfx/status_shield_off.wav");
+                else
+                    AudioManager.playSFX("audio/sfx/item_buff_expire.wav");
                 entry.getKey().removeEffect(ship);
                 iterator.remove();
             }

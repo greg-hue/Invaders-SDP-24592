@@ -2,6 +2,7 @@ package entity;
 
 import java.util.logging.Logger;
 
+import audio.AudioManager;
 import engine.Cooldown;
 import engine.Core;
 
@@ -42,7 +43,7 @@ public class BonusEnemyManager {
 	/**
 	 * Moves the bonus ship, makes it appear or removes it when it escapes or
 	 * its explosion is over. Called once per frame.
-	 * 
+	 *
 	 * @param screenWidth
 	 *            Width of the screen, the ship escapes past it.
 	 */
@@ -55,6 +56,7 @@ public class BonusEnemyManager {
 		}
 		if (this.bonusShip == null && this.spawnCooldown.checkFinished()) {
 			this.bonusShip = new EnemyShip();
+			AudioManager.playSFX("audio/sfx/bonus_appear.wav");
 			this.spawnCooldown.reset();
 			this.logger.info("A special ship appears");
 		}
@@ -67,12 +69,13 @@ public class BonusEnemyManager {
 
 	/**
 	 * Destroys the bonus ship after it was hit by a bullet.
-	 * 
+	 *
 	 * @return Points earned, 0 if there was no bonus ship to destroy.
 	 */
 	public final int destroy() {
 		if (!isActive())
 			return 0;
+		AudioManager.playSFX("audio/sfx/bonus_explosion.wav");
 		this.bonusShip.destroy();
 		this.explosionCooldown.reset();
 		return this.bonusShip.getPointValue();
@@ -80,7 +83,7 @@ public class BonusEnemyManager {
 
 	/**
 	 * Getter for the bonus ship, used to draw it and check collisions.
-	 * 
+	 *
 	 * @return Bonus ship, null if there is none on screen.
 	 */
 	public final EnemyShip getShip() {
@@ -89,7 +92,7 @@ public class BonusEnemyManager {
 
 	/**
 	 * Checks if a bonus ship is on screen and can still be hit, for the HUD.
-	 * 
+	 *
 	 * @return True if a bonus ship is flying and not destroyed.
 	 */
 	public final boolean isActive() {

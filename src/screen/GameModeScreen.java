@@ -1,7 +1,6 @@
 package screen;
 
 import java.awt.event.KeyEvent;
-
 import audio.AudioManager;
 import engine.Cooldown;
 import engine.Core;
@@ -61,11 +60,27 @@ public class GameModeScreen extends Screen { // Implementation of the game mode 
                 this.selected = (this.selected + 1) % NUM_CHOICES;
                 this.selectionCooldown.reset();
                 AudioManager.playSFX("audio/sfx/menu_move.wav");
-            } else if (inputManager.isKeyDown(KeyEvent.VK_SPACE)
-                    || inputManager.isKeyDown(KeyEvent.VK_ENTER)) {
-                chooseOption();
-            } else if (inputManager.isKeyDown(KeyEvent.VK_ESCAPE)) {
-                goBack();
+            }
+
+            if (inputManager.isKeyDown(KeyEvent.VK_SPACE)) {
+                if (this.selected == 2) {
+                    this.returnCode = 1;
+                } else if (this.selected == 0) {
+                    this.returnCode = 8;
+                } else if (this.selected == 1) {
+                    this.returnCode = 2;
+                }
+                this.isRunning = false;
+                if(this.returnCode==1)
+                    AudioManager.playSFX("audio/sfx/menu_back.wav");
+                else
+                    AudioManager.playSFX("audio/sfx/menu_select.wav");
+            }
+
+            if (inputManager.isKeyDown(KeyEvent.VK_ESCAPE)) {
+                this.returnCode = 1;
+                this.isRunning = false;
+                AudioManager.playSFX("audio/sfx/menu_back.wav");
             }
         }
         draw();

@@ -91,6 +91,7 @@ public class ControlsSettingsScreen extends Screen {
         } else if (inputManager.isKeyDown(KeyEvent.VK_SPACE)) {
             confirmSelectedOption();
         } else if (inputManager.isKeyDown(KeyEvent.VK_ESCAPE)) {
+            AudioManager.playSFX("audio/sfx/menu_back.wav");
             this.returnCode = 4;
             this.isRunning = false;
             AudioManager.playSFX("audio/sfx/menu_back.wav");
@@ -156,6 +157,7 @@ public class ControlsSettingsScreen extends Screen {
         this.selectionCooldown.reset();
 
         if (keyCode == KeyEvent.VK_ESCAPE) {
+            AudioManager.playSFX("audio/sfx/menu_back.wav");
             return;
         }
         if (isKeyAssignedToAnotherAction(keyCode)) {

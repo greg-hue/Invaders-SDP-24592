@@ -9,16 +9,18 @@ import campaign.CampaignStageData;
 import engine.Cooldown;
 import engine.Core;
 import engine.GameState;
+import engine.GameplayConfig;
 import engine.Score;
 import audio.AudioManager;
 import records.Achievement;
+import records.RecordsService;
 import java.util.ArrayList;
 
 /**
  * Implements the score screen.
- * 
+ *
  * @author <a href="mailto:RobertoIA1987@gmail.com">Roberto Izquierdo Amo</a>
- * 
+ *
  */
 public class ScoreScreen extends Screen {
 
@@ -40,6 +42,8 @@ public class ScoreScreen extends Screen {
   private boolean gameCleared;
 	/** Checks if the game that just ended was the infinite mode. */
 	private boolean infiniteMode;
+    /** Text describing the mode played: difficulty (campaign) or infinite. */
+    private String modeLabel;
 	/** Current score. */
 	private int score;
 	/** Player lives left. */
@@ -61,7 +65,7 @@ public class ScoreScreen extends Screen {
 
 	/**
 	 * Constructor, establishes the properties of the screen.
-	 * 
+	 *
 	 * @param width
 	 *            Screen width.
 	 * @param height
@@ -88,7 +92,8 @@ public class ScoreScreen extends Screen {
         this.runUnlocks = new ArrayList<Achievement>(unlocks);
 
 		this.infiniteMode = infiniteMode;
-
+        this.modeLabel = infiniteMode ? "infinite mode"
+                : "mode: " + difficultyName(GameplayConfig.getDifficulty());
 		this.level = gameState.getLevel();
 		this.stageFailed = gameState.getLivesRemaining() == 0;
         this.gameCleared = !this.infiniteMode && !this.stageFailed
@@ -120,12 +125,30 @@ public class ScoreScreen extends Screen {
 			AudioManager.playBGM("audio/bgm/music_end_defeat.wav");
 		}
 
+        if (this.isNewRecord) {
+            AudioManager.playSFX("audio/sfx/new_record.wav");
+        }
+
+        RecordsService recordsService = Core.getRecordsService();
+        if (recordsService != null) {
+            boolean hasNewAchievement = false;
+            Achievement achievement;
+            while ((achievement = recordsService.pollNotification()) != null) {
+                if (this.runUnlocks.contains(achievement)) {
+                    hasNewAchievement = true;
+                }
+            }
+            if (hasNewAchievement && !this.isNewRecord) {
+                AudioManager.playSFX("audio/sfx/achievement_unlock.wav");
+            }
+        }
+
 
 	}
 
 	/**
 	 * Starts the action.
-	 * 
+	 *
 	 * @return Next screen code.
 	 */
 	public final int run() {
@@ -208,7 +231,14 @@ public class ScoreScreen extends Screen {
 			logger.warning("Couldn't load high scores!");
 		}
 	}
-
+    /** Converts a GameplayConfig difficulty value to its display name. */
+    private static String difficultyName(final int difficulty) {
+        switch (difficulty) {
+            case GameplayConfig.EASY:  return "Easy";
+            case GameplayConfig.HARD:  return "Hard";
+            default:                   return "Normal";
+        }
+    }
 	/**
 	 * Draws the elements associated with the screen.
 	 */
@@ -219,7 +249,8 @@ public class ScoreScreen extends Screen {
             drawManager.drawAchievementResults(this,this.score,this.livesRemaining,
                     this.shipsDestroyed,accuracy,this.isNewRecord,this.name,this.nameCharSelected,
                     this.runUnlocks,this.inputDelay.checkFinished(),
-                    this.stageFailed && !this.infiniteMode ? this.level : 0, this.gameCleared);
+                    this.stageFailed && !this.infiniteMode ? this.level : 0, this.gameCleared,
+                    this.modeLabel);
             drawManager.completeDrawing(this); return;
         }
 
@@ -227,8 +258,9 @@ public class ScoreScreen extends Screen {
 				this.isNewRecord,this.gameCleared);
 		if (this.stageFailed && !this.infiniteMode)
 			drawManager.drawStageFailed(this, this.level, this.isNewRecord);
-		drawManager.drawResults(this, this.score, this.livesRemaining,
-				this.shipsDestroyed, accuracy, this.isNewRecord);
+        drawManager.drawResults(this, this.score, this.livesRemaining,
+                this.shipsDestroyed, accuracy, this.isNewRecord);
+        drawManager.drawModeLabel(this, this.modeLabel, this.isNewRecord);
 
 		if (this.isNewRecord)
 			drawManager.drawNameInput(this, this.name, this.nameCharSelected);
