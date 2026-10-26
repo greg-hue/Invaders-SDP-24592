@@ -108,7 +108,7 @@ public class AudioControlScreen extends Screen {
 			}
 			if (inputManager.isKeyDown(KeyEvent.VK_SPACE)
         	&& this.selectedOption == MUTE_OPTION) {
-    		toggleMute();
+				AudioControls.toggleMute();
     		this.selectionCooldown.reset();
 			}
 			// Left and right change the volume of the selected option only.
@@ -142,7 +142,7 @@ public class AudioControlScreen extends Screen {
 			}
 			// M toggles the mute state, whichever option is selected.
 			if (inputManager.isKeyDown(KeyEvent.VK_M)) {
-				toggleMute();
+				AudioControls.toggleMute();
 				this.selectionCooldown.reset();
 			}
 			// Esc closes the screen.
@@ -151,6 +151,17 @@ public class AudioControlScreen extends Screen {
 				this.isRunning = false;
 		}
 		}
+	}
+
+	/**
+	 * Turns off the global mute key, because update already toggles
+	 * the mute state with the M key on this screen.
+	 *
+	 * @return Always false.
+	 */
+	@Override
+	protected boolean usesGlobalMuteKey() {
+		return false;
 	}
 
 	/**
@@ -177,7 +188,7 @@ public class AudioControlScreen extends Screen {
 		if (newMouseClick && hoveredOption == MUTE_OPTION
 				&& this.inputDelay.checkFinished()) {
 			this.selectedOption = MUTE_OPTION;
-			toggleMute();
+			AudioControls.toggleMute();
 			this.selectionCooldown.reset();
 		}
 	}
@@ -226,16 +237,6 @@ public class AudioControlScreen extends Screen {
 		volume = Math.max(MIN_VOLUME, Math.min(MAX_VOLUME, volume));
 		AudioManager.setSFXVolume(volume);
 		AudioControls.saveSFXVolume();
-	}
-
-	/**
-	 * Turns the global mute on if it is off, and off if it is on.
-	 * The volume levels are kept, so they come back when unmuted.
-	 * The mute state is saved so it is kept after the game exits.
-	 */
-	private void toggleMute() {
-		AudioManager.setMuted(!AudioManager.isMuted());
-		AudioControls.saveMuted();
 	}
 
 	/**

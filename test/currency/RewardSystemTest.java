@@ -2,6 +2,8 @@ package currency;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -20,6 +22,16 @@ class RewardSystemTest {
     void testInitialBalance() {
         assertEquals(0, assets.getBalance());
         assertEquals(0, rewards.getPendingCurrency());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"A,10", "B,15", "C,20", "BONUS,20", "BOSS_A,50", "BOSS_B,50"})
+    void campaignEnemyRewardsAccumulateWithoutChangingTheBalance(String type, int amount) {
+        assertEquals(amount, rewards.getEnemyReward(type));
+        assertTrue(rewards.rewardEnemy(type));
+        assertTrue(rewards.rewardEnemy(type));
+        assertEquals(amount * 2, rewards.getPendingCurrency());
+        assertEquals(0, assets.getBalance());
     }
 
     @Test
@@ -94,6 +106,28 @@ class RewardSystemTest {
         ));
 
         assertEquals(0, rewards.getPendingCurrency());
+    }
+
+    @Test
+    void testLevelRewardQueriesDoNotAccrueOrSettleCurrency() {
+        assertTrue(rewards.rewardEnemy("BASIC"));
+        assertTrue(rewards.setBaseLevelReward(5));
+        assertEquals(2, rewards.getLevelReward(0));
+        assertEquals(5, rewards.getLevelReward(1));
+        assertEquals(10, rewards.getLevelReward(2));
+        assertEquals(0, rewards.getLevelReward(-1));
+        assertEquals(0, assets.getBalance());
+        assertEquals(10, rewards.getPendingCurrency());
+        assertTrue(rewards.rewardLevel(2));
+        assertEquals(20, rewards.getPendingCurrency());
+
+        assertTrue(rewards.setBaseLevelReward(Integer.MAX_VALUE));
+        assertEquals(Integer.MAX_VALUE, rewards.getLevelReward(1));
+        assertEquals(0, rewards.getLevelReward(2));
+        assertFalse(rewards.rewardLevel(2));
+        assertEquals(20, rewards.getPendingCurrency());
+        assertTrue(rewards.setBaseLevelReward(1));
+        assertEquals(1, rewards.getLevelReward(0));
     }
 
     @Test

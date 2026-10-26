@@ -1,160 +1,98 @@
-# Main Project Demo — conducteur et couverture des équipes
+# Main Project Demo - final main build
 
-## Lancer et présenter
+Updated 26 October 2026 against main `4007cf6`. Dedicated branch: `demo/main-project-presentation`.
+
+## Launch
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-game.ps1 -Demo
 ```
 
-Dans l'IDE : `engine.Core`, argument `--demo`, dossier `res` sur le classpath.
-Le présentateur joue. **Back / Restart / Next** changent l'étape uniquement à la
-demande. F6/F7/F8 font la même chose ; F10 quitte. F5 suspend les événements
-préparés, sans arrêter le combat ou les effets temporaires.
+Requires JDK 17+. The demo compiles sources directly; normal launch retains main's Gradle workflow.
+The presenter plays normally. Back/Restart/Next (F6/F7/F8) change scenes manually. F5 holds prepared cues, not combat. F10 exits.
+Prepared pickup/hit cues normally run after 8 seconds; boss phase cues at 12/20 seconds. There is no scene deadline.
 
-Les menus du haut gardent leur navigation normale. Play, Shop, Hangar, les retours,
-les niveaux suivants, les résultats et le replay restent accessibles. Les textes
-et commandes du bandeau sont en anglais. Le bandeau est placé sous le terrain.
+## Profile
 
-## Profil persistant et répétitions
+Default: `.demo-profile/`, ignored by Git. Settings, credits, purchases and records survive restart and stay separate from normal saves.
+For a clean rehearsal, add `-DemoProfile .\out\final-rehearsal-01`. Reuse that path to verify persistence.
+Starting credits (1000) and ranking history are fixtures. Restart/Back do not undo purchases.
 
-La démo utilise `.demo-profile/` à la racine du projet, ignoré par Git. Ses touches,
-sa difficulté, ses volumes, ses achats, ses scores, ses records et ses succès sont
-conservés entre deux lancements. Le profil normal du joueur reste distinct.
+## Scene order
 
-Pour une répétition neuve, utiliser un **nouveau dossier**, puis conserver ce même
-chemin lors du redémarrage :
+| # | Scene | Presenter action / explanation |
+| --- | --- | --- |
+| 1 | Welcome aboard | Frenchies / VFX / Audio: navigation, stars and menu sounds. |
+| 2 | Prepare your mission | Frenchies: all settings in one menu. |
+| 3 | Sound and music | Chanyoung: adjust BGM/SFX volumes, then press M to toggle mute. |
+| 4 | Custom controls | Frenchies: select an action, press Space, then choose a new key. |
+| 5 | Choose your difficulty | Frenchies / Octopus: Easy, Normal or Hard for campaign gameplay. |
+| 6 | Retained settings | Reopen Controls and Gameplay; confirm cancel/duplicate rejection and retained choices. |
+| 7 | Choose your ship | KimchiBaguette: compare speed, fire rate, lives and projectiles. |
+| 8 | Customize your ship | Frenchies / VFX: use Left/Right to change the ship color. |
+| 9 | Two ways to play | Octopus / Frenchies: campaign progression and endless survival. |
+| 10 | Records before the mission | Chinese can fly: prepared top-ten baseline. Inspect bests and five achievement conditions. |
+| 11 | First mission | Octopus / Friends / VFX / Audio: play using your selected ship. |
+| 12 | Campaign HUD and floating points | Final HUD: stage, lives, score and Credits. Shoot an enemy; watch points and pending Credits update. |
+| 13 | Speedster: movement and bursts | KimchiBaguette: speed 4, two-shot bursts and three lives. Unlock it in the Shop for normal selection. |
+| 14 | Heavy Tank: spread shots | KimchiBaguette: speed 1, three projectiles and five lives. |
+| 15 | Damage particles and flashing | VFX: staged hit at 8s; watch the life loss, red/green flash and player particles. |
+| 16 | Third-stage entry: extra life | Prepared stage-3 entry with 3/4 lives: the final bonus-life rule grants the fourth heart. |
+| 17 | Extra life is capped | Prepared stage-3 entry with Heavy Tank at 5/5 lives: the bonus cannot exceed the cap. |
+| 18 | Enemy movement: Classic sweep | Final game: patterns rotate by stage. Watch smooth movement, aimed shots and acceleration as enemies fall. |
+| 19 | Enemy movement: Wave bounce | Final game: patterns rotate by stage. Watch smooth movement, aimed shots and acceleration as enemies fall. |
+| 20 | Enemy movement: Diagonal bounce | Final game: patterns rotate by stage. Watch smooth movement, aimed shots and acceleration as enemies fall. |
+| 21 | Enemy projectiles: 2 lives | Final adaptive difficulty: newly fired shots use speed 4 (normal). |
+| 22 | Enemy projectiles: 1 life | Final adaptive difficulty: newly fired shots use speed 2 (reduced). |
+| 23 | Falling obstacle: movement penalty | Real red obstacle staged at 8s. Catch it: movement halves for 2s. A shield blocks the slow. |
+| 24 | Energy Shield | Best French: Heavy Tank only: staged shield pickup at 8s, protecting you for 15s. |
+| 25 | Twin Cannon | Best French: staged activation at 8s; shoot to try both cannons. |
+| 26 | Hyperfire | Best French: staged pickup at 8s; hold your fire key to compare fire rates. |
+| 27 | Chameleon Hull | Best French: transformation at 8s; use Up/Down and touch enemies. |
+| 28 | Cluster Grenade | Best French: staged pickup at 8s; press G to launch (if G is unbound). |
+| 29 | Boss A: 850 HP, slow | Final boss mechanics and music; staged phase changes at 12/20s. Defeat it for real score, rewards, VFX and sound. |
+| 30 | Boss B: 800 HP, fast | Final boss mechanics and music; staged phase changes at 12/20s. Defeat it for real score, rewards, VFX and sound. |
+| 31 | Orbital Annihilator: stage 7 | Best French: staged pickup at 8s; hold Space to charge the laser. |
+| 32 | Endless survival | Octopus / KimchiBaguette: zigzags and rising difficulty. Next ends this run. |
+| 33 | Mission results | Review your demo score, lives, accuracy and unlocked achievements. |
+| 34 | Standard Game Over: no-fire run | Do not shoot. Prepared lethal hit at 8s; full high-score table prevents name entry. Check Stage 2 Failed and replay. |
+| 35 | Stage clear and progression | Prepared one-enemy stage: defeat it while alive; the real campaign advances to stage 2. |
+| 36 | Campaign victory | Prepared final encounter: one enemy, boss with 50 HP. Clear both alive to show Game Cleared! |
+| 37 | Life, shield and slow events | Heavy Tank: hit at 8s, life at 12s, shield at 16s, obstacle at 20s. Shield blocks the obstacle; watch real events. |
+| 38 | Status event bus | Actual life, shield and slow events from the final game are listed here after gameplay. |
+| 39 | Records and achievements | Chinese can fly: Left/Right switches tabs. This demo uses a separate profile. |
+| 40 | High-score medals and icons | The Diversity Hires: rank medals, hearts, stars, settings and title icons. |
+| 41 | Permanent upgrades and ship unlocks | Final catalog: Hull, Engine and Reloader have three tiers. Speedster costs 200 Credits. Purchases persist. |
+| 42 | Credits, pending rewards and save retry | Real campaign and endless reward services. Optional buttons prepare a one-shot purchase save failure. |
+| 43 | Purchased upgrades in campaign | Start a fresh campaign: bought Hull, Engine and Reloader upgrades affect lives, movement and firing. Endless is unchanged. |
+| 44 | Custom levels: JSON import and export | Octopus: load and validate the bundled example, export a copy to the demo profile, then click Next to play it. |
+| 45 | Custom level: two authored waves | Play the imported enemy grid and both waves. Custom play does not earn official credits, records or campaign unlocks. |
+| 46 | Save, reload and restart | Reload real saved data here. Relaunch with the same demo profile to verify persistence. |
+| 47 | Final build and presentation notes | The demo now uses main's final gameplay. Only scene preparation and navigation are presentation-specific. |
+| 48 | End of the demonstration | Ready for questions. Use Back to revisit a scene, or Finish to close the demo. |
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-game.ps1 -Demo -DemoProfile .\out\rehearsal-01
-```
+## Changes from the earlier demo
 
-Un nouveau profil reçoit des **données de préparation annoncées** : 1000 crédits,
-un classement de dix parties d'exemple (identifiants `prepared-history-*`) et sept
-high scores élevés. Les succès de combat restent verrouillés pour permettre des
-notifications pendant la démo. Les succès déjà acquis ne sont pas redéclenchés :
-utiliser un nouveau dossier pour répéter leur premier déblocage.
+- Uses production ShopProducts, CampaignRewards and EndlessRewards; final credit HUD is live.
+- Permanent Hull/Engine/Reloader tiers and Speedster unlock replace sample consumable stock.
+- New campaign runs use purchased upgrade snapshots. Prepared ship comparisons intentionally show base ship behavior.
+- Stage patterns, adaptive projectiles, red falling obstacles, slow events, boss defeat effects and audio use final production code.
+- Standard now has 4 lives; Speedster 3; Heavy Tank 5. Only Heavy Tank accepts shields. Boss A has 850 HP.
+- JSON panel uses JsonLevelReader, LevelGameplayAdapter and JsonLevelWriter. The next scene plays actual authored grids and waves.
+- Custom gameplay does not submit official rewards, records or campaign progression.
 
-## Fil conducteur
+## Remaining presentation limits
 
-1. **Accueil et préparation — Frenchies / Audio / VFX**
-   - Montrer navigation clavier puis souris, surbrillance, sons, étoiles et icônes.
-   - Ouvrir Audio, régler BGM et SFX séparément, essayer M puis remettre le son.
-   - Reconfigurer une touche ; montrer Échap pour annuler et le refus d'un doublon.
-   - Choisir une difficulté, rouvrir Settings/Gameplay pour vérifier sa conservation.
-   - Comparer les trois vaisseaux, choisir une couleur, montrer Campaign et Endless.
-   - La souris immobile ne doit plus reprendre la sélection faite au clavier.
-2. **Records avant la mission — Chinese can fly**
-   - Montrer le classement préparé, les records personnels, les cinq conditions de
-     succès, leurs états et dates de déblocage.
-3. **Combat et HUD — Octopus / Friends / VFX / KimchiBaguette**
-   - La première mission utilise le vaisseau, la couleur et les touches choisis.
-   - La scène HUD utilise Standard : `LEVEL 1/7` entre les vies et le score.
-   - Détruire un ennemi au tir normal ; rapprocher l'augmentation du score du
-     `+points` localisé, puis attendre sa disparition (~1 seconde).
-   - Montrer couleurs des rangées, sprites, projectiles, explosions ennemies.
-   - Essayer Speedster (rafale de deux tirs, 100 ms) et Tank (trois tirs, cinq vies).
-   - La scène de dégâts prépare un impact à 8 s : perte d'une vie, particules et
-     clignotement rouge/couleur normale. Choisir vert au Hangar pour rouge/vert.
-4. **Progression et états — Octopus / KimchiBaguette**
-   - Entrée au niveau 3 avec 2/3 vies : la règle existante ajoute la troisième vie.
-   - Entrée avec Tank à 5/5 : aucune sixième vie n'est ajoutée.
-   - Comparer Classic / Wave / Diagonal sur trois scènes. Les adaptateurs de démo
-     sélectionnent les trajectoires existantes et accélèrent leur cadence avec
-     le niveau et les ennemis détruits. Les tirs visent le joueur et utilisent
-     les cooldowns des tireurs de dernière rangée.
-   - Comparer les tirs avec deux vies puis une vie (vitesse 4 puis 2), via
-     l'adaptateur explicite de la démo.
-   - Après 8 s, intercepter l'obstacle orange : vitesse de déplacement réduite de
-     50 % pendant deux secondes, sans dégât et sans changement de cadence de tir.
-     L'obstacle visuel est fourni par la démo ; l'effet utilise `PlayerStatus`.
-5. **Objets — Best French**
-   - Bouclier 15 s, Twin Cannon 15 s, Hyperfire 8 s, Chameleon Hull 5 s, grenade,
-     puis laser au niveau 7. Les activations préparées commencent à 8 s.
-   - Tirer pour comparer les armes ; G lance la grenade (laisser G libre).
-   - Pendant Chameleon : haut/bas, contact avec ennemis, impossibilité de tirer.
-   - Maintenir Espace pour le laser, même si le tir normal a été réassigné.
-6. **Boss A et B — KimchiBaguette**
-   - Deux rencontres autonomes : A (1000 PV, lent) puis B (800 PV, rapide).
-   - Les phases sont préparées à 12/20 s ; observer les attaques simples,
-     multiples, en éventail, puis l'attaque spéciale de dernière phase.
-   - Détruire le dernier ennemi et le boss pour terminer la rencontre. Le
-     raccordement de démo ajoute particules, un son existant de confirmation,
-     comptage de défaite et record de la rencontre terminée. Il ne s'agit pas
-     d'un nouveau son de boss livré par l'équipe Audio.
-7. **Infini, défaite, progression et victoire**
-   - Jouer en Infini, montrer zigzags et montée du rythme ; le raccourci I reste
-     disponible depuis le menu principal. Next termine cette partie de démo.
-   - Scène **Standard Game Over** : ne pas tirer. Un impact létal est préparé à
-     8 s, avec classement déjà plein. Sans nouveau succès, montrer Game Over,
-     `Stage 2 Failed`, résultats et instruction de replay dans le rendu standard.
-   - Scène de progression : une formation d'un ennemi ; la détruire vivant fait
-     passer réellement au niveau 2.
-   - Scène finale : niveau 7 préparé avec un ennemi et un boss à 50 PV. Les
-     détruire vivant pour afficher `Game Cleared!` via le vrai écran de résultats.
-8. **Événements et records après la mission**
-   - La scène d'événements prépare dégât à 8 s, vie à 12 s, bouclier temporaire à
-     16 s et obstacle à 20 s. Lire la ligne d'événement du bandeau.
-   - Consulter ensuite le panneau du bus : il affiche les événements réellement
-     reçus. Les vies/boucliers passent par `GameplayEventPublisher` ; les types de
-     ralentissement manquants localement utilisent un pont de démo identifié.
-   - Revenir aux records et succès : retrouver les parties terminées, leurs
-     scores, durées actives et notifications. Les parties interrompues ne sont
-     pas ajoutées comme parties terminées. Atteindre 20 défaites / 60 secondes
-     actives pour leurs succès ; aucun seuil n'est artificiellement abaissé.
-   - Montrer aussi les médailles de High Scores et les icônes.
-9. **Économie — HanCode**
-   - La boutique utilise les vrais `ShopController`, `PurchaseSystem` et fichiers
-     de sauvegarde, avec un **catalogue d'exemple explicitement annoncé**.
-   - Acheter Energy Shield (100), observer crédit -100 / stock +1. Acheter Demo
-     License (300), observer propriété permanente. Racheter License : refus sans
-     débit. Luxury Sample : refus pour fonds insuffisants, sans changement.
-   - Panneau récompenses : accumuler ennemi +10 et succès Easy/Normal/Hard
-     +50/+100/+200 ; les crédits ne changent qu'après **Settle**.
-   - En combat de démo, les événements de défaite accumulent aussi des récompenses
-     d'exemple ; un stage réussi reçoit le bonus de difficulté. Le règlement
-     transfère puis sauvegarde, sans confondre crédits et score.
-   - **Buy + fail save once** : l'achat réel réussit, la sauvegarde échoue une fois.
-     Noter le stock et le solde. **Retry save only** sauvegarde sans second achat,
-     sans nouveau débit, sans appliquer d'effet et sans régler de nouvelles récompenses.
-   - Scène d'utilisation : acheter du stock avant, laisser B libre puis appuyer B.
-     Le vrai service consomme une unité et active le bouclier, sans nouveau débit.
-     Maintenir B ou essayer pendant un bouclier actif ne consomme pas d'autre unité.
-10. **Persistance et récupération**
-    - **Reload from disk** recharge crédits, quantités, propriétés et records.
-    - **Test recovery on a copy** corrompt uniquement une copie isolée et exerce
-      la récupération réelle depuis son backup. Le profil actif reste intact.
-    - Quitter puis relancer avec le même profil ; vérifier commandes, difficulté,
-      achats et succès. Rouvrir la boutique et les records via les menus normaux.
+Main has no dedicated JSON import/export menu; this demo exposes the implemented APIs through its own panel.
+The final production shop contains permanent upgrades and ships, not consumable shields.
+No remote pending PR status is inferred. The previous missing-integration checklist has been superseded.
 
-## Limites d'intégration à annoncer
-
-Le dépôt local reste la référence : plusieurs comportements annoncés par les
-équipes ne sont pas encore raccordés dans son lancement normal. Le catalogue
-commercial de production est vide ; Boss B n'y est pas sélectionné ; le mouvement
-reste fixé sur Diagonal ; il n'y a pas d'obstacle visuel intégré. Les scènes
-préparées identifient donc leurs adaptateurs au lieu de les attribuer à un merge
-qui n'est pas présent localement. La navigation libre ne sélectionne pas ces
-adaptateurs de combat à l'insu du joueur.
-
-**JSON** : modèles immuables, grille et interfaces `LevelReader`/`LevelWriter`
-existent ; aucun lecteur/écrivain JSON ni point d'entrée n'est présent. Le panneau
-final l'explique. La démo ne prétend pas réaliser un import/export opérationnel.
-
-Les compteurs `icône ×N` du fork Friends, le HUD de monnaie, les popups Endless et
-le recentrage non mergé des résultats avec succès sont exclus. Les bonus d'armes
-restent présentés dans leurs propres scènes Best French, pas comme une livraison
-Friends. Tous les écrans du jeu normal restent disponibles via la navigation.
-
-## Vérifier
+## Verification
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\test-demo.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\invoke-gradle.ps1 -Tasks check
 ```
 
-Les tests couvrent boutons, navigation libre, transactions acceptées/refusées,
-échec et reprise de sauvegarde, quantités consommées, récompenses, variantes de
-combat et persistance dans un **second processus Java**. Les paramètres de durée
-`res/demo.properties`, `-DemoScale`, `-DemoScript` ne servent qu'au contrôle
-accéléré opt-in (`-Dinvaders.demo.autoAdvance=true`), pas au passage des scènes en
-présentation. Une répétition avec le présentateur reste nécessaire pour le son,
-le projecteur et le déroulé oral.
+The demo script runs navigation, cues, final catalog transactions, save retry, separate-JVM persistence,
+JSON roundtrip and custom-record isolation tests, followed by all 48 scenes in accelerated headless mode.

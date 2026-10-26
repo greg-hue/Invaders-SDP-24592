@@ -6,15 +6,16 @@ import engine.Cooldown;
 import engine.Core;
 import engine.GameColors;
 import engine.DrawManager.SpriteType;
+import event.DefeatedEnemyType;
 
 /**
  * Implements a enemy ship, to be destroyed by the player.
- * 
+ *
  * @author <a href="mailto:RobertoIA1987@gmail.com">Roberto Izquierdo Amo</a>
- * 
+ *
  */
 public class EnemyShip extends Entity {
-	
+
 	/** Point value of a type A enemy. */
 	private static final int A_TYPE_POINTS = 10;
 	/** Point value of a type B enemy. */
@@ -32,9 +33,17 @@ public class EnemyShip extends Entity {
 	private int pointValue;
 	/** Cooldown between this ship's shots. Null if the ship cannot shoot. */
 	private Cooldown shootingCooldown;
+	/** Remaining hit points; legacy and bonus enemies start with one. */
+	private int health = 1;
+	/**
+	 * Kind of enemy this is, recorded on creation. Destruction swaps the
+	 * sprite for an explosion, so the sprite cannot be read back later.
+	 */
+	private final DefeatedEnemyType defeatedType;
+
 	/**
 	 * Constructor, establishes the ship's properties.
-	 * 
+	 *
 	 * @param positionX
 	 *            Initial position of the ship in the X axis.
 	 * @param positionY
@@ -44,8 +53,18 @@ public class EnemyShip extends Entity {
 	 */
 	public EnemyShip(final int positionX, final int positionY,
 			final SpriteType spriteType) {
+     this(positionX, positionY, spriteType, 1);
+	}
+
+	/** Creates an enemy with explicit positive initial health. */
+	public EnemyShip(final int positionX, final int positionY,
+			final SpriteType spriteType, final int health) {
 		super(positionX, positionY, 12 * 2, 8 * 2, colorFor(spriteType));
+		if (health <= 0)
+			throw new IllegalArgumentException("health must be positive");
+		this.health = health;
 		this.spriteType = spriteType;
+		this.defeatedType = classify(spriteType);
 		this.animationCooldown = Core.getCooldown(500);
 		this.isDestroyed = false;
 
@@ -78,7 +97,45 @@ public class EnemyShip extends Entity {
 		this.spriteType = SpriteType.EnemyShipSpecial;
 		this.isDestroyed = false;
 		this.pointValue = BONUS_TYPE_POINTS;
+		this.defeatedType = DefeatedEnemyType.BONUS;
 
+	}
+
+	/**
+	 * Classifies an enemy from the sprite it is created with. Both animation
+	 * frames of a normal enemy give the same classification.
+	 *
+	 * @param spriteType
+	 *            Sprite the enemy is created with.
+	 * @return Classification of the enemy, UNKNOWN for an unlisted sprite.
+	 */
+	private static DefeatedEnemyType classify(final SpriteType spriteType) {
+		switch (spriteType) {
+		case EnemyShipA1:
+		case EnemyShipA2:
+			return DefeatedEnemyType.A;
+		case EnemyShipB1:
+		case EnemyShipB2:
+			return DefeatedEnemyType.B;
+		case EnemyShipC1:
+		case EnemyShipC2:
+			return DefeatedEnemyType.C;
+		case EnemyShipSpecial:
+			return DefeatedEnemyType.BONUS;
+		default:
+			return DefeatedEnemyType.UNKNOWN;
+		}
+	}
+
+	/**
+	 * Getter for the kind of enemy this is, for a defeat event. It is taken
+	 * from the sprite the enemy was created with, so it survives the
+	 * animation frames and the explosion applied by {@link #destroy()}.
+	 *
+	 * @return Classification of this enemy.
+	 */
+	public final DefeatedEnemyType getDefeatedType() {
+		return this.defeatedType;
 	}
 
 	private static Color colorFor(final SpriteType spriteType) {
@@ -96,7 +153,7 @@ public class EnemyShip extends Entity {
 
 	/**
 	 * Getter for the score bonus if this ship is destroyed.
-	 * 
+	 *
 	 * @return Value of the ship.
 	 */
 	public final int getPointValue() {
@@ -105,7 +162,7 @@ public class EnemyShip extends Entity {
 
 	/**
 	 * Moves the ship the specified distance.
-	 * 
+	 *
 	 * @param distanceX
 	 *            Distance to move in the X axis.
 	 * @param distanceY
@@ -152,13 +209,29 @@ public class EnemyShip extends Entity {
 	 * Destroys the ship, causing an explosion.
 	 */
 	public final void destroy() {
+		this.health = 0;
 		this.isDestroyed = true;
 		this.spriteType = SpriteType.Explosion;
 	}
 
+	/** Applies one hit. Returns true only for the hit that destroys this ship. */
+	public final boolean hit() {
+		if (this.isDestroyed)
+			return false;
+		if (--this.health == 0) {
+			destroy();
+			return true;
+		}
+		return false;
+	}
+
+	public final int getHealth() {
+		return this.health;
+	}
+
 	/**
 	 * Checks if the ship has been destroyed.
-	 * 
+	 *
 	 * @return True if the ship has been destroyed.
 	 */
 	public final boolean isDestroyed() {
@@ -197,8 +270,14 @@ public class EnemyShip extends Entity {
 	 */
 	public static EnemyShip createByType(final EnemyType type,
 			final int positionX, final int positionY) {
+		return createByType(type, positionX, positionY, 1);
+	}
+
+	/** Creates a typed enemy with the health specified by a custom level. */
+	public static EnemyShip createByType(final EnemyType type,
+			final int positionX, final int positionY, final int health) {
 		if (type == null)
 			throw new IllegalArgumentException("Enemy type cannot be null.");
-		return new EnemyShip(positionX, positionY, type.getSpriteType());
+		return new EnemyShip(positionX, positionY, type.getSpriteType(), health);
 	}
 }

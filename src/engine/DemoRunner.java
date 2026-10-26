@@ -40,7 +40,13 @@ public final class DemoRunner {
     private RunSession run;
     private ShipType selectedShip = ShipType.STANDARD;
     private GameState lastState = new GameState(1, 0, 3, 0, 0);
-    private final java.util.Set<String> rewardEvents = new java.util.HashSet<>();
+    private final java.util.Map<Screen, AutoCloseable> rewardSubscriptions = new java.util.HashMap<>();
+    private final CampaignRewards campaignRewards;
+    private final EndlessRewards endlessRewards;
+    private CampaignUpgrades runUpgrades = CampaignUpgrades.none();
+    private final java.util.Set<Screen> customScreens = new java.util.HashSet<>();
+    private level.LevelDefinition customDefinition;
+    private String jsonMessage = "Load the bundled two-wave example, export it, then play the next scene.";
     private final java.util.Set<Screen> hookedScreens = new java.util.HashSet<>();
     private final java.util.Set<Screen> settledScreens = new java.util.HashSet<>();
     private final java.util.Set<Screen> encounterScreens = new java.util.HashSet<>();
@@ -89,6 +95,9 @@ public final class DemoRunner {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> profile.records.close(), "demo-records-shutdown"));
         shop = profile.shop;
         Core.setDemoServices(records, shop);
+        campaignRewards = new CampaignRewards(profile.assets, Core.getFileManager());
+        endlessRewards = new EndlessRewards(profile.assets, Core.getFileManager());
+        Core.setDemoRewardServices(campaignRewards, endlessRewards);
         AudioControls.applySettings();
         frame = java.awt.GraphicsEnvironment.isHeadless() ? null
                 : new Frame(448, 520 + DemoPlayback.FOOTER_HEIGHT);
@@ -137,45 +146,45 @@ public final class DemoRunner {
                 () -> new PlayerRecordsScreen(width, height, FPS, records));
         combat("campaign", "First mission", "Octopus / Friends / VFX / Audio: play using your selected ship.",
                 1, () -> selectedShip);
-        add("hud", "Campaign HUD and floating points", "Standard Ship: LEVEL 1/7, hearts and gold star. Shoot an enemy; watch +points fade.",
+        add("hud", "Campaign HUD and floating points", "Final HUD: stage, lives, score and Credits. Shoot an enemy; watch points and pending Credits update.",
                 () -> preparedGame(1, ShipType.STANDARD, 3, false, new GameSettings(3, 2, 60, 2000), null));
-        combat("speedster", "Speedster: movement and bursts", "KimchiBaguette: speed 4, two-shot bursts and two lives.",
+        combat("speedster", "Speedster: movement and bursts", "KimchiBaguette: speed 4, two-shot bursts and three lives. Unlock it in the Shop for normal selection.",
                 1, () -> ShipType.SPEEDSTER);
         combat("tank", "Heavy Tank: spread shots", "KimchiBaguette: speed 1, three projectiles and five lives.",
                 1, () -> ShipType.TANK);
         combat("status", "Damage particles and flashing",
                 "VFX: staged hit at 8s; watch the life loss, red/green flash and player particles.",
                 1, () -> ShipType.STANDARD, DemoAction.DAMAGE);
-        add("extra-life", "Third-stage entry: extra life", "Prepared stage-3 entry with 2/3 lives: the existing bonus-life rule grants the third heart.",
-                () -> preparedGame(3, ShipType.STANDARD, 2, true, new GameSettings(3, 2, 40, 2000), null));
+        add("extra-life", "Third-stage entry: extra life", "Prepared stage-3 entry with 3/4 lives: the final bonus-life rule grants the fourth heart.",
+                () -> preparedGame(3, ShipType.STANDARD, 3, true, new GameSettings(3, 2, 40, 2000), null));
         add("life-cap", "Extra life is capped", "Prepared stage-3 entry with Heavy Tank at 5/5 lives: the bonus cannot exceed the cap.",
                 () -> preparedGame(3, ShipType.TANK, 5, true, new GameSettings(3, 2, 40, 2000), null));
         for (int stage = 1; stage <= 3; stage++) {
             final int movementStage = stage;
             String pattern = new String[] { "Classic sweep", "Wave bounce", "Diagonal bounce" }[stage - 1];
             add("movement-" + stage, "Enemy movement: " + pattern,
-                    "Demo adapter selects the existing pattern. Watch aimed bottom-row shots and acceleration as enemies fall.",
+                    "Final game: patterns rotate by stage. Watch smooth movement, aimed shots and acceleration as enemies fall.",
                     () -> {
-                        demo.DemoCombatConfig config = new demo.DemoCombatConfig(); config.movementStage = movementStage;
+                        demo.DemoCombatConfig config = new demo.DemoCombatConfig();
                         return preparedGame(movementStage, ShipType.STANDARD, 3, false,
                                 new GameSettings(4, 2, 50 - movementStage * 8, 1500), config);
                     });
         }
         for (int lives : new int[] { 2, 1 }) {
             final int initialLives = lives;
-            add("adaptive-" + lives, "Enemy projectiles: " + lives + " lives",
-                    "Octopus comparison via demo adapter: newly fired shots use speed " + (lives == 1 ? "2 (reduced)." : "4 (normal)."),
+            add("adaptive-" + lives, "Enemy projectiles: " + lives + (lives == 1 ? " life" : " lives"),
+                    "Final adaptive difficulty: newly fired shots use speed " + (lives == 1 ? "2 (reduced)." : "4 (normal)."),
                     () -> {
-                        demo.DemoCombatConfig config = new demo.DemoCombatConfig(); config.adaptiveProjectiles = true;
+                        demo.DemoCombatConfig config = new demo.DemoCombatConfig();
                         return preparedGame(2, ShipType.STANDARD, initialLives, false, new GameSettings(3, 2, 50, 900), config);
                     });
         }
         scenes.add(new Scene("obstacle", "Falling obstacle: movement penalty",
-                "Demo-only obstacle falls after 8s. Catch it: movement halves for 2s; no life loss or fire-rate change.",
+                "Real red obstacle staged at 8s. Catch it: movement halves for 2s. A shield blocks the slow.",
                 () -> preparedGame(1, ShipType.STANDARD, 3, false, new GameSettings(3, 2, 60, 10000),
                         new demo.DemoCombatConfig()), DemoAction.OBSTACLE));
-        combat("shield", "Energy Shield", "Best French: staged shield pickup at 8s, protecting you for 15s.",
-                2, () -> ShipType.STANDARD, DemoAction.SHIELD);
+        combat("shield", "Energy Shield", "Best French: Heavy Tank only: staged shield pickup at 8s, protecting you for 15s.",
+                2, () -> ShipType.TANK, DemoAction.SHIELD);
         combat("twin", "Twin Cannon", "Best French: staged activation at 8s; shoot to try both cannons.",
                 3, () -> ShipType.STANDARD, DemoAction.TWIN_CANNON);
         combat("hyperfire", "Hyperfire", "Best French: staged pickup at 8s; hold your fire key to compare fire rates.",
@@ -186,11 +195,11 @@ public final class DemoRunner {
                 2, () -> ShipType.STANDARD, DemoAction.GRENADE);
         for (entity.Boss.BossType type : entity.Boss.BossType.values()) {
             scenes.add(new Scene("boss-" + type.name(), type == entity.Boss.BossType.BOSS_A
-                    ? "Boss A: 1000 HP, slow" : "Boss B: 800 HP, fast",
-                    "Demo adapter: phases at 12/20s. Final phase adds a special attack. Defeat it for event, particles and sound.",
+                    ? "Boss A: 850 HP, slow" : "Boss B: 800 HP, fast",
+                    "Final boss mechanics and music; staged phase changes at 12/20s. Defeat it for real score, rewards, VFX and sound.",
                     () -> {
-                        demo.DemoCombatConfig config = new demo.DemoCombatConfig(); config.bossType = type; config.bossFeedback = true;
-                        return preparedGame(5, ShipType.TANK, 5, false, new GameSettings(1, 1, 60, 3000), config);
+                        demo.DemoCombatConfig config = new demo.DemoCombatConfig(); config.bossType = type;
+                        return preparedGame(type == entity.Boss.BossType.BOSS_A ? 3 : 5, ShipType.TANK, 5, false, new GameSettings(1, 1, 60, 3000), config);
                     }, DemoAction.BOSS_PHASE_TWO, DemoAction.BOSS_PHASE_THREE));
         }
         combat("laser", "Orbital Annihilator: stage 7",
@@ -211,42 +220,41 @@ public final class DemoRunner {
         add("campaign-clear", "Campaign victory", "Prepared final encounter: one enemy, boss with 50 HP. Clear both alive to show Game Cleared!",
                 () -> {
                     demo.DemoCombatConfig config = new demo.DemoCombatConfig(); config.bossType = entity.Boss.BossType.BOSS_B;
-                    config.bossHealth = 50; config.bossFeedback = true;
+                    config.bossHealth = 50;
                     return preparedGame(7, ShipType.STANDARD, 3, false, new GameSettings(1, 1, 60, 4000), config);
                 });
         scenes.add(new Scene("status-events", "Life, shield and slow events",
-                "Staged hit at 8s, extra life at 12s, timed shield at 16s, obstacle at 20s. Watch the event line.",
-                () -> preparedGame(1, ShipType.STANDARD, 3, false, new GameSettings(3, 2, 60, 10000),
+                "Heavy Tank: hit at 8s, life at 12s, shield at 16s, obstacle at 20s. Shield blocks the obstacle; watch real events.",
+                () -> preparedGame(1, ShipType.TANK, 3, false, new GameSettings(3, 2, 60, 10000),
                         new demo.DemoCombatConfig()),
                 DemoAction.DAMAGE, DemoAction.EXTRA_LIFE, DemoAction.STATUS_SHIELD, DemoAction.OBSTACLE));
-        add("status-bus", "Status event bus", "Actual player events and the demo slow-event bridge are listed here after gameplay.",
+        add("status-bus", "Status event bus", "Actual life, shield and slow events from the final game are listed here after gameplay.",
                 () -> new DemoPanelScreen(width, height, FPS, "Gameplay event subscribers", () -> {
                     java.util.List<String> lines = new java.util.ArrayList<>();
                     lines.add("Life and shield events use the shared GameplayEventPublisher.");
-                    lines.add("The local slow-event bridge is demonstration-only.");
+                    lines.add("Slow start, refresh and end events now use the production event bus.");
                     lines.addAll(statusEvents); return lines;
                 }, new String[0]));
         add("records", "Records and achievements", "Chinese can fly: Left/Right switches tabs. This demo uses a separate profile.",
                 () -> new PlayerRecordsScreen(width, height, FPS, records));
         add("high-scores", "High-score medals and icons", "The Diversity Hires: rank medals, hearts, stars, settings and title icons.",
                 () -> new HighScoreScreen(width, height, FPS));
-        add("shop", "Purchases and ownership", "Sample catalog: buy Shield and License, retry owned License, then try Luxury Sample.",
+        add("shop", "Permanent upgrades and ship unlocks", "Final catalog: Hull, Engine and Reloader have three tiers. Speedster costs 200 Credits. Purchases persist.",
                 () -> new ShopScreen(width, height, FPS, shop));
-        add("economy", "Credits, pending rewards and save retry", "HanCode services, demo-only controls: credits are separate from score. Try each action.",
+        add("economy", "Credits, pending rewards and save retry", "Real campaign and endless reward services. Optional buttons prepare a one-shot purchase save failure.",
                 this::economyPanel);
-        add("purchased-use", "Use one purchased consumable", "Buy shield stock in Shop, then press B here. Quantity drops by one; credits are not charged again.",
-                () -> {
-                    demo.DemoCombatConfig config = new demo.DemoCombatConfig(); config.purchasedItems = shop;
-                    return preparedGame(2, ShipType.STANDARD, 3, false, new GameSettings(3, 2, 60, 2000), config);
-                });
+        add("upgraded-campaign", "Purchased upgrades in campaign", "Start a fresh campaign: bought Hull, Engine and Reloader upgrades affect lives, movement and firing. Endless is unchanged.",
+                () -> { startRun(); return campaignScreen(new GameState(1, 0, runUpgrades.getMaxLives(selectedShip), 0, 0), selectedShip, false); });
+        add("json-tools", "Custom levels: JSON import and export", "Octopus: load and validate the bundled example, export a copy to the demo profile, then click Next to play it.", this::jsonPanel);
+        add("json-play", "Custom level: two authored waves", "Play the imported enemy grid and both waves. Custom play does not earn official credits, records or campaign unlocks.", this::customGame);
         add("reload", "Save, reload and restart", "Reload real saved data here. Relaunch with the same demo profile to verify persistence.",
                 this::reloadPanel);
-        add("integration-status", "Integration boundaries", "Prepared adapters are identified; JSON has no menu entry. Production gameplay is unchanged.",
-                () -> new DemoPanelScreen(width, height, FPS, "Presentation integration notes", () -> java.util.Arrays.asList(
-                    "Purchases use real HanCode services and a labelled sample catalog.",
-                    "Reward, boss-selection and obstacle adapters run only in prepared demo scenes.",
-                    "JSON: immutable level models and IO interfaces exist; no JSON reader/writer or menu entry is present locally.",
-                    "Unmerged HUD counters, currency HUD and Endless score popups are not presented as integrated features."), new String[0]));
+        add("integration-status", "Final build and presentation notes", "The demo now uses main's final gameplay. Only scene preparation and navigation are presentation-specific.",
+                () -> new DemoPanelScreen(width, height, FPS, "Final integration notes", () -> java.util.Arrays.asList(
+                    "Final production catalog, rewards, credit HUD, boss effects and slow events are integrated.",
+                    "JSON import/export and custom gameplay are available through this demo panel; main has no custom-level menu.",
+                    "Shop purchases are permanent upgrades and ship ownership, not consumable shield stock.",
+                    "Starting credits and ranking history are rehearsal data. Staged hits, pickups and boss phases are presenter aids."), new String[0]));
         add("end", "End of the demonstration", "Ready for questions. Use Back to revisit a scene, or Finish to close the demo.",
                 () -> new TitleScreen(width, height, FPS));
     }
@@ -261,14 +269,19 @@ public final class DemoRunner {
     }
 
     private void attachDemoServices(Screen screen, DemoPlayback playback) {
-        if (!hookedScreens.add(screen) || !(screen instanceof GameScreen)) return;
+        if (!hookedScreens.add(screen) || customScreens.contains(screen)) return;
+        if (screen instanceof InfiniteGameScreen) {
+            InfiniteGameScreen infinite = (InfiniteGameScreen) screen;
+            rewardSubscriptions.put(screen, endlessRewards.subscribe(infinite.getGameplayEvents(), infinite.getActiveRunId()));
+            playback.setLiveStatus(() -> latestEvent);
+            return;
+        }
+        if (!(screen instanceof GameScreen)) return;
         GameScreen game = (GameScreen) screen;
-        game.getGameplayEvents().subscribe(event.EnemyDefeatedEvent.class, event -> {
-            if (rewardEvents.add(event.getRunId() + ":" + event.getEventId())) profile.rewards.rewardEnemy("BASIC");
-        });
+        rewardSubscriptions.put(screen, campaignRewards.subscribe(game.getGameplayEvents(), game.getGameState().getLevel()));
         game.getGameplayEvents().subscribe(entity.PlayerStatusEvent.class,
                 event -> logStatus(event.getType().getEventName() + " | lives " + event.getLives()));
-        game.getGameplayEvents().subscribe(demo.DemoStatusEvent.class, event -> logStatus(event.getDescription()));
+
         playback.setLiveStatus(() -> latestEvent);
     }
 
@@ -279,42 +292,82 @@ public final class DemoRunner {
     }
 
     private void settleGameplay(Screen screen) {
-        if (!settledScreens.add(screen) || !(screen instanceof GameScreen)) return;
-        if (((GameScreen) screen).isStageCleared()) profile.rewards.rewardLevel(GameplayConfig.getDifficulty());
-        profile.settle();
+        if (!settledScreens.add(screen)) return;
+        AutoCloseable subscription = rewardSubscriptions.remove(screen);
+        if (subscription != null) {
+            try { subscription.close(); } catch (Exception e) { throw new IllegalStateException(e); }
+        }
     }
 
     private Screen economyPanel() {
-        return new DemoPanelScreen(width, height, FPS, "Credits and reward settlement", () -> java.util.Arrays.asList(
-                "Rehearsal data: score and credits are independent.",
-                "Credits: " + profile.assets.getBalance() + " | Pending rewards: " + profile.rewards.getPendingCurrency(),
-                "Shields: " + profile.assets.getItemQuantity(demo.DemoProfile.SHIELD)
-                        + " | License owned: " + profile.assets.isUnlocked(demo.DemoProfile.UNLOCK),
-                "Easy / Normal / Hard success bonuses: 50 / 100 / 200.",
+        return new DemoPanelScreen(width, height, FPS, "Credits and permanent ownership", () -> java.util.Arrays.asList(
+                "Rehearsal starting balance; live kills use final production rewards.",
+                "Credits: " + shop.getBalance() + " | Pending: " + (campaignRewards.getPendingCurrency() + endlessRewards.getPendingCurrency()),
+                upgradeSummary(),
+                "Speedster available: " + shop.isShipAvailable(ShipType.SPEEDSTER),
                 "Purchase save status: " + shop.getSaveStatus(), profile.message),
-                new String[] { "Enemy: accrue 10", "Easy clear: accrue 50", "Normal clear: accrue 100", "Hard clear: accrue 200",
-                    "Settle pending rewards", "Buy + fail save once", "Retry save only", "Reload saved data" },
-                () -> { profile.rewards.rewardEnemy("BASIC"); profile.message = "Reward pending; credit balance unchanged until settlement."; },
-                () -> { profile.rewards.rewardLevel(GameplayConfig.EASY); profile.message = "Prepared successful Easy stage event."; },
-                () -> { profile.rewards.rewardLevel(GameplayConfig.NORMAL); profile.message = "Prepared successful Normal stage event."; },
-                () -> { profile.rewards.rewardLevel(GameplayConfig.HARD); profile.message = "Prepared successful Hard stage event."; },
-                profile::settle,
+                new String[] { "Buy next Hull + fail save", "Retry purchase save", "Retry reward settlement", "Reload saved data" },
                 () -> {
-                    int before = profile.assets.getItemQuantity(demo.DemoProfile.SHIELD);
-                    if (profile.assets.getBalance() < 100) {
-                        profile.message = "Need 100 credits for this purchase; accrue and settle rewards first.";
-                        return;
+                    int owned = currency.PermanentUpgrade.HULL.getLevel(shop.snapshot());
+                    if (owned == 3) { profile.message = "Hull already at maximum tier."; return; }
+                    String id = currency.PermanentUpgrade.HULL.getProductId(owned + 1);
+                    if (shop.getBalance() < currency.PermanentUpgrade.HULL.getPrice(owned + 1)) {
+                        profile.message = "Not enough Credits. Earn rewards in campaign or endless first."; return;
                     }
                     profile.shopSession.failNextSave();
-                    profile.message = "Purchase: " + shop.purchase(demo.DemoProfile.SHIELD) + "; stock " + before + " -> "
-                            + profile.assets.getItemQuantity(demo.DemoProfile.SHIELD) + ". Now retry SAVE only.";
+                    profile.message = "Purchase: " + shop.purchase(id) + ". Retry SAVE without buying again.";
                 },
-                () -> {
-                    int before = profile.assets.getItemQuantity(demo.DemoProfile.SHIELD);
-                    boolean saved = shop.retrySave();
-                    profile.message = "Save retry: " + saved + "; stock " + before + " -> "
-                            + profile.assets.getItemQuantity(demo.DemoProfile.SHIELD) + ". No second charge or effect.";
-                }, this::reloadProfile);
+                () -> { int before = shop.getBalance(); profile.message = "Save retry: " + shop.retrySave() + "; Credits " + before + " -> " + shop.getBalance(); },
+                () -> { profile.message = "Reward retry: " + Core.retryRewards(campaignRewards, endlessRewards); },
+                this::reloadProfile);
+    }
+
+    private String upgradeSummary() {
+        return "Hull " + currency.PermanentUpgrade.HULL.getLevel(shop.snapshot()) + "/3 | Engine "
+                + currency.PermanentUpgrade.ENGINE.getLevel(shop.snapshot()) + "/3 | Reloader "
+                + currency.PermanentUpgrade.RELOADER.getLevel(shop.snapshot()) + "/3";
+    }
+
+    private Path customSource() { return profile.directory.resolve("presentation-level.json"); }
+
+    private void loadCustomExample() {
+        try (InputStream input = DemoRunner.class.getClassLoader().getResourceAsStream("demo-level.json")) {
+            if (input == null) throw new IOException("Missing bundled level example");
+            if (!Files.exists(customSource())) Files.copy(input, customSource());
+            level.LevelDefinition loaded = new level.JsonLevelReader().read(customSource());
+            LevelGameplayAdapter.prepare(loaded, width, height, GameplayConfig.getMultiplier());
+            customDefinition = loaded;
+            jsonMessage = "Imported and validated: " + loaded.getName() + "; " + loaded.getWaves().size() + " waves.";
+        } catch (IOException | IllegalArgumentException e) { jsonMessage = "Import rejected: " + e.getMessage(); }
+    }
+
+    private Screen jsonPanel() {
+        return new DemoPanelScreen(width, height, FPS, "Custom level workflow", () -> java.util.Arrays.asList(
+                "The final JSON reader validates schema, grids and wave settings.",
+                "Example: two waves, typed enemies, holes in the second grid.",
+                "Source: demo profile / presentation-level.json",
+                "Export: demo profile / exported-level.json",
+                "Next opens custom gameplay without official rewards or records.", jsonMessage),
+                new String[] { "Import / reload JSON", "Export loaded level", "Validate exported copy" },
+                this::loadCustomExample,
+                () -> { if (customDefinition == null) loadCustomExample();
+                    if (customDefinition != null) try {
+                        new level.JsonLevelWriter().write(profile.directory.resolve("exported-level.json"), customDefinition);
+                        jsonMessage = "Exported original level definition successfully.";
+                    } catch (IOException e) { jsonMessage = "Export failed: " + e.getMessage(); } },
+                () -> { try {
+                    level.LevelDefinition copy = new level.JsonLevelReader().read(profile.directory.resolve("exported-level.json"));
+                    jsonMessage = "Export validated: " + copy.getName() + "; " + copy.getWaves().size() + " waves.";
+                } catch (IOException e) { jsonMessage = "Validation failed: " + e.getMessage(); } });
+    }
+
+    private Screen customGame() {
+        if (customDefinition == null) loadCustomExample();
+        if (customDefinition == null) return jsonPanel();
+        GameScreen game = GameScreen.forCustomLevel(new GameState(1, 0, 3, 0, 0), customDefinition,
+                GameplayConfig.getMultiplier(), width, height, FPS);
+        customScreens.add(game);
+        return game;
     }
 
     private void reloadProfile() {
@@ -324,8 +377,8 @@ public final class DemoRunner {
     private Screen reloadPanel() {
         return new DemoPanelScreen(width, height, FPS, "Save and reload", () -> java.util.Arrays.asList(
                 "This rehearsal profile persists across application restarts.",
-                "Credits: " + profile.assets.getBalance() + " | Shields: " + profile.assets.getItemQuantity(demo.DemoProfile.SHIELD),
-                "Permanent license owned: " + profile.assets.isUnlocked(demo.DemoProfile.UNLOCK),
+                "Credits: " + profile.assets.getBalance() + " | Speedster: " + shop.isShipAvailable(ShipType.SPEEDSTER),
+                upgradeSummary(),
                 "Completed records: " + records.getRecordCount() + " | Best score: " + records.getHighestScore(),
                 "Difficulty: " + new String[] {"Easy", "Normal", "Hard"}[GameplayConfig.getDifficulty()] + " | Fire key code: "
                         + ControlsConfig.getKey(ControlsConfig.FIRE),
@@ -350,7 +403,10 @@ public final class DemoRunner {
     }
 
     private void startRun() {
+        DifficultyAdjustWhilePlaying.getInstance().reset();
+        runUpgrades = CampaignUpgrades.from(profile.assets.snapshot());
         run = new RunSession(UUID.randomUUID().toString());
+        campaignRewards.startRun(run.getRunId());
         records.startRun(run.getRunId());
     }
 
@@ -404,6 +460,8 @@ public final class DemoRunner {
                 }
             }
         } finally {
+            for (Screen pending : new java.util.ArrayList<>(rewardSubscriptions.keySet())) settleGameplay(pending);
+            Core.retryRewards(campaignRewards, endlessRewards);
             records.close();
             AudioManager.stopBGM();
             if (frame != null) frame.dispose();
@@ -414,6 +472,11 @@ public final class DemoRunner {
 
     /** Normal game navigation stays available above the presentation footer. */
     private Screen followGameNavigation(Screen previous, int result) {
+        if (customScreens.contains(previous)) {
+            return new DemoPanelScreen(width, height, FPS, "Custom level finished", () -> java.util.Arrays.asList(
+                    "This custom attempt has ended. No official progression, records or Credits were submitted.",
+                    "Click Restart to play both waves again, or Next to continue."), new String[0]);
+        }
         if (previous instanceof GameScreen) {
             settleGameplay(previous);
             GameScreen game = (GameScreen) previous;
@@ -428,7 +491,7 @@ public final class DemoRunner {
                 int nextLevel = state.getLevel() + 1;
                 return campaignScreen(new GameState(nextLevel, state.getScore(), state.getLivesRemaining(),
                         state.getBulletsShot(), state.getShipsDestroyed()), type,
-                        nextLevel % 3 == 0 && state.getLivesRemaining() < type.getMaxLives());
+                        nextLevel % 3 == 0 && state.getLivesRemaining() < runUpgrades.getMaxLives(type));
             }
             finishRun(game);
             GameState results = game.isStageCleared()
@@ -451,7 +514,7 @@ public final class DemoRunner {
 
     private GameScreen campaignScreen(GameState state, ShipType type, boolean bonusLife) {
         return new GameScreen(state, Core.applyDifficulty(CampaignStageData.getStageSettings(state.getLevel()),
-                GameplayConfig.getMultiplier()), bonusLife, width, height, FPS, type, run);
+                GameplayConfig.getMultiplier()), bonusLife, width, height, FPS, type, run, runUpgrades);
     }
 
     private Screen screenForCode(int code) {
@@ -461,7 +524,7 @@ public final class DemoRunner {
         case 14: return new GameModeScreen(width, height, FPS);
         case 2:
             startRun();
-            return campaignScreen(new GameState(1, 0, selectedShip.getMaxLives(), 0, 0), selectedShip, false);
+            return campaignScreen(new GameState(1, 0, runUpgrades.getMaxLives(selectedShip), 0, 0), selectedShip, false);
         case 3: return new HighScoreScreen(width, height, FPS);
         case 4: return new SettingsScreen(width, height, FPS);
         case 5: return new AudioControlScreen(width, height, FPS);
@@ -481,6 +544,7 @@ public final class DemoRunner {
 
     private void finishRun(Screen screen) {
         settleGameplay(screen);
+        if (customScreens.contains(screen)) return;
         boolean completed = false;
         if (screen instanceof GameScreen) {
             GameScreen game = (GameScreen) screen;

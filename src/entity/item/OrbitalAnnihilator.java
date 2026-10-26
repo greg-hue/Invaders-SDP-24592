@@ -2,7 +2,7 @@ package entity.item;
 
 import entity.Entity;
 import entity.Ship;
-
+import audio.AudioManager;
 /**
  * Orbital Annihilator (Doomsday Laser). Once
  * caught (arm()), it can be triggered one time: 1.5 s of charge, then a 2 s
@@ -38,6 +38,7 @@ public class OrbitalAnnihilator {
             return false;
         this.state = State.CHARGING;
         this.phaseStart = System.currentTimeMillis();
+        AudioManager.playSFX("audio/sfx/item_laser_charge.wav");
         return true;
     }
 
@@ -47,6 +48,7 @@ public class OrbitalAnnihilator {
         if (this.state == State.CHARGING && elapsed >= CHARGE_DURATION) {
             this.state = State.FIRING;
             this.phaseStart = System.currentTimeMillis();
+            AudioManager.playSFX("audio/sfx/item_laser_beam.wav");
         } else if (this.state == State.FIRING && elapsed >= BEAM_DURATION) {
             this.state = State.LOCKED;
         }
@@ -54,8 +56,10 @@ public class OrbitalAnnihilator {
 
     /** Cancels a charge in progress (ship hit), the item is not lost. */
     public final void cancelCharge() {
-        if (this.state == State.CHARGING)
+        if (this.state == State.CHARGING) {
+            AudioManager.playSFX("audio/sfx/item_laser_cancel.wav");
             this.state = State.IDLE;
+        }
     }
 
     public final boolean isCharging() {

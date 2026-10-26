@@ -18,20 +18,17 @@ import records.ProfileSnapshot;
 import records.ProfileStore;
 import shop.ShopController;
 import shop.ShopProduct;
+import shop.ShopProducts;
 import currency.ShopCatalog.Category;
 
-/** Persistent rehearsal data and explicitly labelled sample products, not a production catalog. */
+/** Persistent rehearsal data using the final production catalog. */
 public final class DemoProfile {
-    public static final String SHIELD = "demo.energy-shield";
-    public static final String UNLOCK = "demo.permanent-unlock";
-    public static final String EXPENSIVE = "demo.unaffordable";
     public final Path directory;
     public final PlayerAssets assets = new PlayerAssets();
-    public final RewardSystem rewards = new RewardSystem(assets);
     public RecordsService records;
     public final ShopController shop;
     public final shop.DemoShopFactory.Session shopSession;
-    public String message = "Sample catalog. Starting credits are rehearsal data.";
+    public String message = "Final production catalog. Starting credits are rehearsal data.";
 
     public DemoProfile(Path directory) throws IOException {
         this.directory = directory;
@@ -63,12 +60,7 @@ public final class DemoProfile {
         }
     }
 
-    public static List<ShopProduct> products() {
-        return Arrays.asList(
-                new ShopProduct(SHIELD, "Energy Shield", Category.INVENTORY, 100, "Sample consumable: 15-second shield"),
-                new ShopProduct(UNLOCK, "Demo License", Category.UNLOCKABLE, 300, "Sample permanent ownership flag"),
-                new ShopProduct(EXPENSIVE, "Luxury Sample", Category.UNLOCKABLE, Integer.MAX_VALUE, "Insufficient-funds example"));
-    }
+    public static List<ShopProduct> products() { return ShopProducts.availableProducts(); }
 
     public void reload() {
         try {
@@ -79,12 +71,6 @@ public final class DemoProfile {
                 throw new IOException("Invalid saved assets");
             message = "Reloaded from disk: credits, quantities, unlocks and records restored.";
         } catch (IOException exception) { message = "Reload failed: " + exception.getMessage(); }
-    }
-
-    public void settle() {
-        engine.SettlementResult result = new engine.RewardSettlementCoordinator(
-                rewards, assets, Core.getFileManager()).processSettlement();
-        message = "Settlement: " + result + ". Retrying a save does not settle new rewards.";
     }
 
     public void checkRecovery() {

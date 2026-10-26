@@ -1,9 +1,4 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>Space Invaders — Main Project Demo Presenter Guide</title>
-<style>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Space Invaders - Final Demo Presenter Guide</title><style>
 @page { size: A4; margin: 14mm 15mm; }
 * { box-sizing: border-box; }
 body { margin: 0; color: #172336; font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.48; }
@@ -38,178 +33,15 @@ li { margin: 5px 0; }
 .checklist td { font-size: 12px; padding: 9px; line-height: 1.4; }
 .checklist .scene { width: 24%; }
 @media screen { body { background: #e9eef2; } .page { width: 210mm; height: 297mm; padding: 14mm 15mm 27mm; background: white; margin: 20px auto; box-shadow: 0 3px 20px #0001; } .footer { left: 15mm; right: 15mm; bottom: 14mm; } }
-</style>
-</head>
-<body>
 
-<section class="page">
-<div class="eyebrow">Space Invaders · Main Project Demo</div>
-<h1>Presenter<br>runbook</h1>
-<p class="lead">The complete 46-step walkthrough.<br>You play the game and decide when to move on.</p>
-<div class="rule"></div>
-<p class="meta">English handover · 23 October 2026 · Current local demo build</p>
-<h3>Launch from the project root</h3>
-<pre class="command">powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-game.ps1 -Demo</pre>
-<table class="compact">
-<tr><th>Presenter control</th><th>Action</th></tr>
-<tr><td><strong>Back / F6</strong></td><td>Return to the previous presentation step.</td></tr>
-<tr><td><strong>Restart / F7</strong></td><td>Restart the current step and its prepared events.</td></tr>
-<tr><td><strong>Next / F8</strong></td><td>Move on whenever you are ready. There is no scene time limit.</td></tr>
-<tr><td><strong>F5</strong></td><td>Hold/resume prepared events. Gameplay and active effects continue.</td></tr>
-<tr><td><strong>F10</strong></td><td>Exit the presentation. The last step also has a Finish button.</td></tr>
-</table>
-<p>The game area keeps its normal navigation: menus, Back, campaign progression, results and replay remain usable. The footer controls the presentation step independently.</p>
-<div class="box notice"><p><strong>Build disclaimer — please read before presenting.</strong><br>This guide describes the current local build, not a claim that every requested PR has been merged. Some integrations use explicitly labelled demo-only adapters and sample data. JSON import/export is not operational locally. Merge and recheck the pending integrations before describing them as normal-game features; see the completion checklist on page 8.</p></div>
-<div class="footer"><span>SPACE INVADERS · PRESENTER GUIDE</span><span>01 / 08</span></div>
-</section>
-
-<section class="page">
-<div class="eyebrow">Steps 01–10 · Prepare the mission</div>
-<h2>Menus, settings and customization</h2>
-<p class="team">Frenchies · Chanyoung · The Diversity Hires · KimchiBaguette · Chinese can fly</p>
-<p>The English scene names below match the footer. Use Next after completing each demonstration.</p>
-<table>
-<tr><th>#</th><th>Scene</th><th>Presenter action and talking point</th></tr>
-<tr><td class="step">01</td><td class="scene">Welcome aboard</td><td>Navigate with the keyboard, then hover and click with the mouse. Point out highlighting, menu sounds, stars and icons.</td></tr>
-<tr><td class="step">02</td><td class="scene">Prepare your mission</td><td>Show the Audio, Controls and Gameplay categories in Settings.</td></tr>
-<tr><td class="step">03</td><td class="scene">Sound and music</td><td>Adjust music and sound-effect volumes separately. Press <strong>M</strong> to mute, then restore sound.</td></tr>
-<tr><td class="step">04</td><td class="scene">Custom controls</td><td>Rebind one action. Demonstrate <strong>Escape</strong> cancelling capture and rejection of a key assigned to another action.</td></tr>
-<tr><td class="step">05</td><td class="scene">Choose your difficulty</td><td>Select Easy, Normal or Hard for campaign gameplay.</td></tr>
-<tr><td class="step">06</td><td class="scene">Retained settings</td><td>Reopen Controls and Gameplay to show that the choices have been retained.</td></tr>
-<tr><td class="step">07</td><td class="scene">Choose your ship</td><td>Compare Standard, Speedster and Heavy Tank: movement speed, fire interval and lives. Select one.</td></tr>
-<tr><td class="step">08</td><td class="scene">Customize your ship</td><td>Use Left/Right to change color. Choose green if you want the later damage flash to alternate red/green.</td></tr>
-<tr><td class="step">09</td><td class="scene">Two ways to play</td><td>Introduce Campaign progression and Endless survival.</td></tr>
-<tr><td class="step">10</td><td class="scene">Records before the mission</td><td>Show the prepared top-ten baseline, personal bests and five achievement conditions. Left/Right switches tabs.</td></tr>
-</table>
-<div class="box"><p><strong>Before the first combat:</strong> remember your new fire/movement keys. Leave <strong>G</strong> and <strong>B</strong> unassigned: they are used later for grenades and purchased shields. Reserve F5–F8 and F10 for the presentation.</p></div>
-<div class="footer"><span>SPACE INVADERS · PRESENTER GUIDE</span><span>02 / 08</span></div>
-</section>
-
-<section class="page">
-<div class="eyebrow">Steps 11–17 · Learn the combat</div>
-<h2>Ships, HUD and player feedback</h2>
-<p class="team">Octopus · Friends · KimchiBaguette · The Diversity Hires · Audio</p>
-<table>
-<tr><th>#</th><th>Scene</th><th>Presenter action and talking point</th></tr>
-<tr><td class="step">11</td><td class="scene">First mission</td><td>Play using the chosen ship, color and controls. Explain basic movement, shooting and enemy formations.</td></tr>
-<tr><td class="step">12</td><td class="scene">Campaign HUD and floating points</td><td>With Standard Ship, point out <strong>LEVEL 1/7</strong>, hearts and the gold score star. Defeat an enemy with normal fire, compare the score increase with its <strong>+points</strong> popup, and let the popup fade (~1 second).</td></tr>
-<tr><td class="step">13</td><td class="scene">Speedster: movement and bursts</td><td>Show speed 4, two lives, and two shots fired 100 ms apart.</td></tr>
-<tr><td class="step">14</td><td class="scene">Heavy Tank: spread shots</td><td>Show slower movement, five lives, and a three-projectile spread.</td></tr>
-<tr><td class="step">15</td><td class="scene">Damage particles and flashing</td><td>A hit is prepared at <strong>8 seconds</strong>. Show the lost life, player particles and red/base-color flash. Green customization gives the requested red/green example.</td></tr>
-<tr><td class="step">16</td><td class="scene">Third-stage entry: extra life</td><td>The prepared stage-3 entry begins with 2/3 lives. Show that the existing extra-life rule adds the third heart.</td></tr>
-<tr><td class="step">17</td><td class="scene">Extra life is capped</td><td>Heavy Tank enters at 5/5 lives. Show that the bonus does not add a sixth life.</td></tr>
-</table>
-<h3>Visual contributions to call out during play</h3>
-<ul>
-<li>Enemy explosion particles and the larger player explosion.</li>
-<li>Moving starfield, colored enemy rows and red special enemy.</li>
-<li>Distinct player-ship and projectile sprites.</li>
-<li>Hearts for lives, broken hearts for lost lives and a gold star for score.</li>
-</ul>
-<div class="box"><p><strong>Timing reminder:</strong> “8 seconds” is the prepared event time within a scene, not a deadline to press Next. You can stay as long as needed. Restart repeats the setup.</p></div>
-<div class="footer"><span>SPACE INVADERS · PRESENTER GUIDE</span><span>03 / 08</span></div>
-</section>
-
-<section class="page">
-<div class="eyebrow">Steps 18–23 · Compare enemy behavior</div>
-<h2>Trajectories, projectiles and penalties</h2>
-<p class="team">KimchiBaguette · Octopus</p>
-<table>
-<tr><th>#</th><th>Scene</th><th>Presenter action and talking point</th></tr>
-<tr><td class="step">18</td><td class="scene">Enemy movement: Classic sweep</td><td>Show the classic formation sweep. Observe bottom-row shooters aiming at the player's position.</td></tr>
-<tr><td class="step">19</td><td class="scene">Enemy movement: Wave bounce</td><td>Compare the wave trajectory. Explain the per-shooter cooldowns and different firing times.</td></tr>
-<tr><td class="step">20</td><td class="scene">Enemy movement: Diagonal bounce</td><td>Show the diagonal trajectory. Defeat enemies and observe the presentation adapter's faster movement cadence.</td></tr>
-<tr><td class="step">21</td><td class="scene">Enemy projectiles: 2 lives</td><td>Observe normal newly fired formation projectiles: speed 4.</td></tr>
-<tr><td class="step">22</td><td class="scene">Enemy projectiles: 1 lives</td><td>Compare newly fired projectiles at speed 2 when one life remains. The scene title matches the current application wording.</td></tr>
-<tr><td class="step">23</td><td class="scene">Falling obstacle: movement penalty</td><td>An orange obstacle starts falling after <strong>8 seconds</strong>. Intercept it: movement is halved for two seconds, without losing a life or changing the firing interval.</td></tr>
-</table>
-<div class="box notice"><p><strong>Use accurate wording:</strong> these prepared scenes select existing movement patterns and connect health-based firing/obstacle behavior through demo-only adapters. The local normal game does not yet provide all of the announced stage rotation and obstacle integration. Do not describe those connections as already merged.</p></div>
-<h3>Suggested transition</h3>
-<p>“We have seen the basic combat and how enemy behavior changes the challenge. Next, we will show the equipment that changes how the player can respond.”</p>
-<div class="footer"><span>SPACE INVADERS · PRESENTER GUIDE</span><span>04 / 08</span></div>
-</section>
-
-<section class="page">
-<div class="eyebrow">Steps 24–31 · Equipment and bosses</div>
-<h2>Power-ups and special encounters</h2>
-<p class="team">Best French · KimchiBaguette</p>
-<table>
-<tr><th>#</th><th>Scene</th><th>Presenter action and talking point</th></tr>
-<tr><td class="step">24</td><td class="scene">Energy Shield</td><td>Prepared pickup at <strong>8 s</strong>. Let enemy shots reach the shield and show protection, then expiration after 15 seconds.</td></tr>
-<tr><td class="step">25</td><td class="scene">Twin Cannon</td><td>Prepared activation at <strong>8 s</strong>. Shoot before and after to compare the two cannons; the effect lasts 15 seconds. In normal play, its falling item is collected by shooting it.</td></tr>
-<tr><td class="step">26</td><td class="scene">Hyperfire</td><td>Hold your fire key. Compare the cadence before and after the prepared pickup at <strong>8 s</strong>; the buff lasts eight seconds.</td></tr>
-<tr><td class="step">27</td><td class="scene">Chameleon Hull</td><td>Transformation starts at <strong>8 s</strong>. Use Up/Down, touch enemies, and show that shooting is disabled. The normal ship returns after five seconds.</td></tr>
-<tr><td class="step">28</td><td class="scene">Cluster Grenade</td><td>After the prepared pickup at <strong>8 s</strong>, press <strong>G</strong> to launch. Show the explosion into spreading fragments.</td></tr>
-<tr><td class="step">29</td><td class="scene">Boss A: 1000 HP, slow</td><td>Observe phases prepared at <strong>12 s / 20 s</strong> and the final-phase special attack. Defeat the boss and remaining enemy to complete the encounter and record it.</td></tr>
-<tr><td class="step">30</td><td class="scene">Boss B: 800 HP, fast</td><td>Compare its speed and attacks. Again, wait for the final phase before killing it. Show defeat feedback and the encounter result.</td></tr>
-<tr><td class="step">31</td><td class="scene">Orbital Annihilator: stage 7</td><td>Weapon prepared at <strong>8 s</strong>. Hold <strong>Space</strong> to charge the laser; show its beam and neutralized enemy projectiles.</td></tr>
-</table>
-<div class="box"><p><strong>Do not kill the bosses too early:</strong> wait beyond the 20-second phase change to show the special attack. Space remains the laser's fixed input even if normal fire was rebound.</p></div>
-<p class="small">Boss B selection and defeat feedback use a demo bridge. The defeat sound reuses an existing confirmation cue; it is not a newly delivered boss audio asset.</p>
-<div class="footer"><span>SPACE INVADERS · PRESENTER GUIDE</span><span>05 / 08</span></div>
-</section>
-
-<section class="page">
-<div class="eyebrow">Steps 32–40 · Progress and performance</div>
-<h2>Results, events and records</h2>
-<p class="team">Octopus · Friends · Chinese can fly · KimchiBaguette · The Diversity Hires</p>
-<table class="compact">
-<tr><th>#</th><th>Scene</th><th>Presenter action and talking point</th></tr>
-<tr><td class="step">32</td><td class="scene">Endless survival</td><td>Play and show zigzag enemies and increasing pressure. The I shortcut is available from the title menu. <strong>Next ends this demo run.</strong></td></tr>
-<tr><td class="step">33</td><td class="scene">Mission results</td><td>Explain score, remaining lives, accuracy and achievements unlocked during the run.</td></tr>
-<tr><td class="step">34</td><td class="scene">Standard Game Over: no-fire run</td><td><strong>Do not shoot.</strong> A lethal hit is prepared at <strong>8 s</strong>. The full high-score table and no-fire setup avoid name entry/new achievements. Show Game Over, Stage 2 Failed, results and replay instructions.</td></tr>
-<tr><td class="step">35</td><td class="scene">Stage clear and progression</td><td>Defeat the single enemy while alive. Show real advancement to stage 2.</td></tr>
-<tr><td class="step">36</td><td class="scene">Campaign victory</td><td>Prepared final stage: one enemy and a boss with 50 HP. Clear both while alive to show <strong>Game Cleared!</strong></td></tr>
-<tr><td class="step">37</td><td class="scene">Life, shield and slow events</td><td>Watch the footer event line: hit at <strong>8 s</strong>, extra life at <strong>12 s</strong>, timed shield at <strong>16 s</strong>, obstacle at <strong>20 s</strong>.</td></tr>
-<tr><td class="step">38</td><td class="scene">Status event bus</td><td>Show events actually received. Explain that other systems can subscribe. Life/shield events use the shared bus; the local slow-event bridge is demo-only.</td></tr>
-<tr><td class="step">39</td><td class="scene">Records and achievements</td><td>Find completed runs and unlocked achievements. Left/Right changes tabs. Explain first run, first enemy, 20 defeats, 60 active seconds and beating a previous best.</td></tr>
-<tr><td class="step">40</td><td class="scene">High-score medals and icons</td><td>Show rank medals. Recall title/settings icons, hearts, the score star and new sprites.</td></tr>
-</table>
-<div class="box"><p><strong>Achievement rules stay real:</strong> thresholds are not lowered. A completed run is recorded once; interrupted scenes are not fabricated completed runs. Achievements unlock only once per profile.</p></div>
-<div class="footer"><span>SPACE INVADERS · PRESENTER GUIDE</span><span>06 / 08</span></div>
-</section>
-
-<section class="page">
-<div class="eyebrow">Steps 41–46 · Economy and closing</div>
-<h2>Purchases, persistence and handover</h2>
-<p class="team">HanCode · Chinese can fly · Frenchies</p>
-<table class="compact">
-<tr><th>#</th><th>Scene</th><th>Presenter action and talking point</th></tr>
-<tr><td class="step">41</td><td class="scene">Purchases and ownership</td><td>Buy <strong>Energy Shield (100)</strong>: credits decrease, stock increases. Buy <strong>Demo License (300)</strong>: ownership becomes permanent. Buy License again: rejected without a debit. Try <strong>Luxury Sample</strong>: insufficient funds, no state change.</td></tr>
-<tr><td class="step">42</td><td class="scene">Credits, pending rewards and save retry</td><td>Accrue enemy/stage rewards; credits remain unchanged until <strong>Settle</strong>. Show Easy/Normal/Hard bonuses of 50/100/200. Click <strong>Buy + fail save once</strong>, note balance/stock, then <strong>Retry save only</strong>: no second purchase or charge.</td></tr>
-<tr><td class="step">43</td><td class="scene">Use one purchased consumable</td><td>Have shield stock available, then press <strong>B</strong>. One unit is consumed and the shield activates without charging credits again. Holding B or retrying during an active shield must not spend another unit.</td></tr>
-<tr><td class="step">44</td><td class="scene">Save, reload and restart</td><td>Click <strong>Reload from disk</strong> to restore saved data. <strong>Test recovery on a copy</strong> exercises backup recovery on an isolated copy. Quit/relaunch with the same profile to verify full persistence.</td></tr>
-<tr><td class="step">45</td><td class="scene">Integration boundaries</td><td>Identify prepared demo adapters and pending integration. Explain that JSON IO is not operational in the local build.</td></tr>
-<tr><td class="step">46</td><td class="scene">End of the demonstration</td><td>Take questions. Use Back to revisit a feature or Finish to close the demo.</td></tr>
-</table>
-<h3>Shop controls</h3>
-<p>Up/Down selects the section; Left/Right selects a product; Space/Enter confirms; Escape returns. R retries a failed shop save. The separate economy panel has clickable actions.</p>
-<h3>Profile preparation and restart</h3>
-<p>The default rehearsal folder is <code>.demo-profile/</code>, separate from the normal player profile. A new rehearsal receives 1000 sample credits, ten prepared ranking entries and seven high scores. To repeat first-time unlocks, use a new folder:</p>
-<pre class="command">powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-game.ps1 -Demo -DemoProfile .\out\rehearsal-01</pre>
-<p class="small">Reuse that exact profile path after restarting. Settings, purchases, scores, records and achievements persist. Never imply that prepared baseline entries were earned live.</p>
-<div class="footer"><span>SPACE INVADERS · PRESENTER GUIDE</span><span>07 / 08</span></div>
-</section>
-
-<section class="page">
-<div class="eyebrow">Pending PRs · Completion checklist</div>
-<h2>What still needs integration</h2>
-<p>This checklist compares the requested presentation with the current local source. It does not infer the status of remote PRs. Recheck it after merging incoming work.</p>
-<table class="checklist">
-<tr><th>Area</th><th>Current local status / next verification</th></tr>
-<tr><td class="scene">JSON import/export<br><span class="small">Level Design</span></td><td>Only level models and reader/writer interfaces are present. A concrete JSON reader/writer and an accessible entry point are still needed. After merge: import, play, export, reload, and verify validation/error handling. <strong>No operational JSON IO is demonstrated now.</strong></td></tr>
-<tr><td class="scene">Production economy<br><span class="small">Currency / Items / Level Design</span></td><td>The production catalog is empty. The demo supplies sample products and reward/use adapters around real services. Agree production IDs/prices and verify the complete normal-game purchase, reward, use and save flow.</td></tr>
-<tr><td class="scene">Movement by stage<br><span class="small">Ship / Level Design</span></td><td>The demo selects existing patterns and adapts cadence; the normal local formation remains fixed to Diagonal. Verify merged stage rotation and acceleration during ordinary campaign progression.</td></tr>
-<tr><td class="scene">Health-based projectiles<br><span class="small">Level Design</span></td><td>The 4-to-2 speed comparison is provided by the demo adapter for newly fired formation shots. Verify the intended production health trigger and projectile coverage after merge.</td></tr>
-<tr><td class="scene">Obstacle / slow events<br><span class="small">Ship / HUD / VFX</span></td><td>The slow effect exists, but the falling obstacle and missing slow-event types are bridged for this demo. Verify the merged collision path, two-second 50% slow, no damage/fire-rate change, and event delivery.</td></tr>
-<tr><td class="scene">Boss B / defeat integration<br><span class="small">Ship / Level Design / Audio / Records</span></td><td>Both boss implementations exist, but normal local campaign spawning selects A. The demo selects B and adds defeat feedback/counting. Verify production spawn data, intended boss audio/VFX and one-time record/event behavior.</td></tr>
-<tr><td class="scene">Explicitly excluded HUD work</td><td>Friends' fork-only single-icon ×N counter and achievement-result centering are not claimed as merged. Currency HUD and Endless score popups are excluded from the requested Friends demonstration; do not silently add them as acceptance conditions.</td></tr>
-</table>
-<div class="box notice"><p><strong>Suggested spoken disclaimer:</strong><br>“This walkthrough uses the integrated game plus clearly identified presentation setups. Some announced connections are still pending PR integration. We distinguish those setups from normal gameplay, and we do not claim working JSON import/export in this build.”</p></div>
-<h3>After the pending PRs arrive</h3>
-<p>Build with JDK 17, rerun <code>scripts/test-demo.ps1</code>, and rehearse the affected scenes. Replace demo bridges with merged production behavior where appropriate. Recheck scene order, inputs, persistence and standard Game Over before sending an updated guide.</p>
-<div class="footer"><span>SPACE INVADERS · PRESENTER GUIDE</span><span>08 / 08</span></div>
-</section>
-
-</body>
-</html>
+.scene {width:32%;} td {padding:8px;} .compact td {padding:8px;}
+</style></head><body><section class="page"><div class="eyebrow">Final main build &middot; 26 October 2026</div><h1>Space Invaders<br>Presenter Guide</h1><p class="lead">48 scenes. You play the game; you choose when to move on.</p><div class="rule"></div><h3>Launch with JDK 17 or later</h3><pre class="command">powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-game.ps1 -Demo</pre><p>From an IDE, run <code>engine.Core</code> with <code>--demo</code> and <code>res</code> on the classpath.</p><h3>Presenter controls</h3><table><tr><th>Control</th><th>Action</th></tr><tr><td>Back / F6</td><td>Previous scene</td></tr><tr><td>Restart / F7</td><td>Recreate the current scene; purchases remain saved</td></tr><tr><td>Next / F8</td><td>Continue when ready; no scene timer</td></tr><tr><td>F5</td><td>Hold or resume prepared cues; gameplay continues</td></tr><tr><td>F10</td><td>Exit the demo</td></tr></table><div class="box"><p>Play normally above the footer. Use your configured movement and fire keys. Prepared items usually appear at 8 seconds; boss phase cues run at 12 and 20 seconds. Wait through the normal opening countdown.</p></div><div class="box notice"><p><b>Build note:</b> This guide replaces the earlier pending-PR checklist. It follows final main <code>4007cf6</code>. Real shop products, rewards, JSON tools, obstacles and boss effects replace the old demo adapters. Starting credits and ranking history are prepared rehearsal data.</p></div><div class="footer"><span>SPACE INVADERS &middot; FINAL MAIN DEMO &middot; 26 OCT 2026</span><span>1 / 8</span></div></section><section class="page"><div class="eyebrow">Presentation order</div><h2>Scenes 1&ndash;8</h2><p class="small">Use Next when your explanation is finished. Restart repeats a scene.</p><table class="compact"><tr><th>#</th><th>Scene</th><th>What to show or explain</th></tr><tr><td class="step">1</td><td class="scene">Welcome aboard</td><td>Frenchies / VFX / Audio: navigation, stars and menu sounds.</td></tr><tr><td class="step">2</td><td class="scene">Prepare your mission</td><td>Frenchies: all settings in one menu.</td></tr><tr><td class="step">3</td><td class="scene">Sound and music</td><td>Chanyoung: adjust BGM/SFX volumes, then press M to toggle mute.</td></tr><tr><td class="step">4</td><td class="scene">Custom controls</td><td>Frenchies: select an action, press Space, then choose a new key.</td></tr><tr><td class="step">5</td><td class="scene">Choose your difficulty</td><td>Frenchies / Octopus: Easy, Normal or Hard for campaign gameplay.</td></tr><tr><td class="step">6</td><td class="scene">Retained settings</td><td>Reopen Controls and Gameplay; confirm cancel/duplicate rejection and retained choices.</td></tr><tr><td class="step">7</td><td class="scene">Choose your ship</td><td>KimchiBaguette: compare speed, fire rate, lives and projectiles.</td></tr><tr><td class="step">8</td><td class="scene">Customize your ship</td><td>Frenchies / VFX: use Left/Right to change the ship color.</td></tr></table><div class="footer"><span>SPACE INVADERS &middot; FINAL MAIN DEMO &middot; 26 OCT 2026</span><span>2 / 8</span></div></section><section class="page"><div class="eyebrow">Presentation order</div><h2>Scenes 9&ndash;16</h2><p class="small">Use Next when your explanation is finished. Restart repeats a scene.</p><table class="compact"><tr><th>#</th><th>Scene</th><th>What to show or explain</th></tr><tr><td class="step">9</td><td class="scene">Two ways to play</td><td>Octopus / Frenchies: campaign progression and endless survival.</td></tr><tr><td class="step">10</td><td class="scene">Records before the mission</td><td>Chinese can fly: prepared top-ten baseline. Inspect bests and five achievement conditions.</td></tr><tr><td class="step">11</td><td class="scene">First mission</td><td>Octopus / Friends / VFX / Audio: play using your selected ship.</td></tr><tr><td class="step">12</td><td class="scene">Campaign HUD and floating points</td><td>Final HUD: stage, lives, score and Credits. Shoot an enemy; watch points and pending Credits update.</td></tr><tr><td class="step">13</td><td class="scene">Speedster: movement and bursts</td><td>KimchiBaguette: speed 4, two-shot bursts and three lives. Unlock it in the Shop for normal selection.</td></tr><tr><td class="step">14</td><td class="scene">Heavy Tank: spread shots</td><td>KimchiBaguette: speed 1, three projectiles and five lives.</td></tr><tr><td class="step">15</td><td class="scene">Damage particles and flashing</td><td>VFX: staged hit at 8s; watch the life loss, red/green flash and player particles.</td></tr><tr><td class="step">16</td><td class="scene">Third-stage entry: extra life</td><td>Prepared stage-3 entry with 3/4 lives: the final bonus-life rule grants the fourth heart.</td></tr></table><div class="footer"><span>SPACE INVADERS &middot; FINAL MAIN DEMO &middot; 26 OCT 2026</span><span>3 / 8</span></div></section><section class="page"><div class="eyebrow">Presentation order</div><h2>Scenes 17&ndash;24</h2><p class="small">Use Next when your explanation is finished. Restart repeats a scene.</p><table class="compact"><tr><th>#</th><th>Scene</th><th>What to show or explain</th></tr><tr><td class="step">17</td><td class="scene">Extra life is capped</td><td>Prepared stage-3 entry with Heavy Tank at 5/5 lives: the bonus cannot exceed the cap.</td></tr><tr><td class="step">18</td><td class="scene">Enemy movement: Classic sweep</td><td>Final game: patterns rotate by stage. Watch smooth movement, aimed shots and acceleration as enemies fall.</td></tr><tr><td class="step">19</td><td class="scene">Enemy movement: Wave bounce</td><td>Final game: patterns rotate by stage. Watch smooth movement, aimed shots and acceleration as enemies fall.</td></tr><tr><td class="step">20</td><td class="scene">Enemy movement: Diagonal bounce</td><td>Final game: patterns rotate by stage. Watch smooth movement, aimed shots and acceleration as enemies fall.</td></tr><tr><td class="step">21</td><td class="scene">Enemy projectiles: 2 lives</td><td>Final adaptive difficulty: newly fired shots use speed 4 (normal).</td></tr><tr><td class="step">22</td><td class="scene">Enemy projectiles: 1 life</td><td>Final adaptive difficulty: newly fired shots use speed 2 (reduced).</td></tr><tr><td class="step">23</td><td class="scene">Falling obstacle: movement penalty</td><td>Real red obstacle staged at 8s. Catch it: movement halves for 2s. A shield blocks the slow.</td></tr><tr><td class="step">24</td><td class="scene">Energy Shield</td><td>Best French: Heavy Tank only: staged shield pickup at 8s, protecting you for 15s.</td></tr></table><div class="footer"><span>SPACE INVADERS &middot; FINAL MAIN DEMO &middot; 26 OCT 2026</span><span>4 / 8</span></div></section><section class="page"><div class="eyebrow">Presentation order</div><h2>Scenes 25&ndash;32</h2><p class="small">Use Next when your explanation is finished. Restart repeats a scene.</p><table class="compact"><tr><th>#</th><th>Scene</th><th>What to show or explain</th></tr><tr><td class="step">25</td><td class="scene">Twin Cannon</td><td>Best French: staged activation at 8s; shoot to try both cannons.</td></tr><tr><td class="step">26</td><td class="scene">Hyperfire</td><td>Best French: staged pickup at 8s; hold your fire key to compare fire rates.</td></tr><tr><td class="step">27</td><td class="scene">Chameleon Hull</td><td>Best French: transformation at 8s; use Up/Down and touch enemies.</td></tr><tr><td class="step">28</td><td class="scene">Cluster Grenade</td><td>Best French: staged pickup at 8s; press G to launch (if G is unbound).</td></tr><tr><td class="step">29</td><td class="scene">Boss A: 850 HP, slow</td><td>Final boss mechanics and music; staged phase changes at 12/20s. Defeat it for real score, rewards, VFX and sound.</td></tr><tr><td class="step">30</td><td class="scene">Boss B: 800 HP, fast</td><td>Final boss mechanics and music; staged phase changes at 12/20s. Defeat it for real score, rewards, VFX and sound.</td></tr><tr><td class="step">31</td><td class="scene">Orbital Annihilator: stage 7</td><td>Best French: staged pickup at 8s; hold Space to charge the laser.</td></tr><tr><td class="step">32</td><td class="scene">Endless survival</td><td>Octopus / KimchiBaguette: zigzags and rising difficulty. Next ends this run.</td></tr></table><div class="footer"><span>SPACE INVADERS &middot; FINAL MAIN DEMO &middot; 26 OCT 2026</span><span>5 / 8</span></div></section><section class="page"><div class="eyebrow">Presentation order</div><h2>Scenes 33&ndash;40</h2><p class="small">Use Next when your explanation is finished. Restart repeats a scene.</p><table class="compact"><tr><th>#</th><th>Scene</th><th>What to show or explain</th></tr><tr><td class="step">33</td><td class="scene">Mission results</td><td>Review your demo score, lives, accuracy and unlocked achievements.</td></tr><tr><td class="step">34</td><td class="scene">Standard Game Over: no-fire run</td><td>Do not shoot. Prepared lethal hit at 8s; full high-score table prevents name entry. Check Stage 2 Failed and replay.</td></tr><tr><td class="step">35</td><td class="scene">Stage clear and progression</td><td>Prepared one-enemy stage: defeat it while alive; the real campaign advances to stage 2.</td></tr><tr><td class="step">36</td><td class="scene">Campaign victory</td><td>Prepared final encounter: one enemy, boss with 50 HP. Clear both alive to show Game Cleared!</td></tr><tr><td class="step">37</td><td class="scene">Life, shield and slow events</td><td>Heavy Tank: hit at 8s, life at 12s, shield at 16s, obstacle at 20s. Shield blocks the obstacle; watch real events.</td></tr><tr><td class="step">38</td><td class="scene">Status event bus</td><td>Actual life, shield and slow events from the final game are listed here after gameplay.</td></tr><tr><td class="step">39</td><td class="scene">Records and achievements</td><td>Chinese can fly: Left/Right switches tabs. This demo uses a separate profile.</td></tr><tr><td class="step">40</td><td class="scene">High-score medals and icons</td><td>The Diversity Hires: rank medals, hearts, stars, settings and title icons.</td></tr></table><div class="footer"><span>SPACE INVADERS &middot; FINAL MAIN DEMO &middot; 26 OCT 2026</span><span>6 / 8</span></div></section><section class="page"><div class="eyebrow">Presentation order</div><h2>Scenes 41&ndash;48</h2><p class="small">Use Next when your explanation is finished. Restart repeats a scene.</p><table class="compact"><tr><th>#</th><th>Scene</th><th>What to show or explain</th></tr><tr><td class="step">41</td><td class="scene">Permanent upgrades and ship unlocks</td><td>Final catalog: Hull, Engine and Reloader have three tiers. Speedster costs 200 Credits. Purchases persist.</td></tr><tr><td class="step">42</td><td class="scene">Credits, pending rewards and save retry</td><td>Real campaign and endless reward services. Optional buttons prepare a one-shot purchase save failure.</td></tr><tr><td class="step">43</td><td class="scene">Purchased upgrades in campaign</td><td>Start a fresh campaign: bought Hull, Engine and Reloader upgrades affect lives, movement and firing. Endless is unchanged.</td></tr><tr><td class="step">44</td><td class="scene">Custom levels: JSON import and export</td><td>Octopus: load and validate the bundled example, export a copy to the demo profile, then click Next to play it.</td></tr><tr><td class="step">45</td><td class="scene">Custom level: two authored waves</td><td>Play the imported enemy grid and both waves. Custom play does not earn official credits, records or campaign unlocks.</td></tr><tr><td class="step">46</td><td class="scene">Save, reload and restart</td><td>Reload real saved data here. Relaunch with the same demo profile to verify persistence.</td></tr><tr><td class="step">47</td><td class="scene">Final build and presentation notes</td><td>The demo now uses main&#x27;s final gameplay. Only scene preparation and navigation are presentation-specific.</td></tr><tr><td class="step">48</td><td class="scene">End of the demonstration</td><td>Ready for questions. Use Back to revisit a scene, or Finish to close the demo.</td></tr></table><div class="footer"><span>SPACE INVADERS &middot; FINAL MAIN DEMO &middot; 26 OCT 2026</span><span>7 / 8</span></div></section><section class="page"><div class="eyebrow">Presenter reference</div><h2>Final rules and remaining limits</h2><table class="checklist"><tr><th>Area</th><th>What the final version does</th></tr>
+<tr><td class="scene">Ship balance</td><td>Standard: 4 lives, speed 2, 750 ms shot interval. Speedster: 3 lives, speed 4, 400 ms bursts; unlock for 200 Credits. Heavy Tank: 5 lives, speed 1, 1000 ms spread shots. Only Heavy Tank accepts shields.</td></tr>
+<tr><td>Permanent upgrades</td><td>Hull adds up to 3 maximum lives, Engine adds up to 3 speed, Reloader reduces the interval by up to 30%. Three tiers cost 100 / 250 / 500 Credits. Effects are captured at the start of a new campaign; Endless stays unchanged.</td></tr>
+<tr><td>Rewards and HUD</td><td>Campaign rewards use actual enemy classifications and stage completion events. Easy / Normal / Hard clear bonuses are 50 / 100 / 200. Endless grants 1 Credit per defeat. The HUD includes pending earned Credits; purchases use the settled balance.</td></tr>
+<tr><td>Bosses and sound</td><td>Boss A: 850 HP; Boss B: 800 HP. Production boss selection, phases, defeat points, effects and sounds are active. Boss music plays on boss stages; the urgent last-life track has priority.</td></tr>
+<tr><td>Custom levels</td><td>The JSON reader, writer, validation and custom gameplay are implemented. Main still has no dedicated import/export menu. The demo provides a panel for a bundled example, export and revalidation. Edit presentation-level.json inside the demo profile and reload to try another definition.</td></tr>
+<tr><td>Scope</td><td>The final shop contains permanent upgrades and ships. The earlier sample consumable shop has been removed from the demo. Staged Speedster scenes preview its behavior; ordinary Hangar selection still requires the real unlock.</td></tr></table>
+<h3>Persistence and rehearsal</h3><p>Default saves go to <code>.demo-profile/</code>, separate from normal player progress. For a clean rehearsal, add <code>-DemoProfile .\out\final-rehearsal-01</code> to the launch command. Reuse that path to demonstrate a restart. Back and Restart do not undo purchases.</p>
+<div class="box notice"><p><b>Suggested spoken disclaimer:</b> &ldquo;This presentation runs on the final game build. The buttons and prepared encounters help us show each feature. Custom JSON tools are exposed through the demo panel because the main menu has no entry for them.&rdquo;</p></div>
+<p class="small">This is a source-based integration statement, not a claim about remote PR status. No additional missing PR is assumed. The isolated profile starts with 1000 Credits and prepared high scores.</p><div class="footer"><span>SPACE INVADERS &middot; FINAL MAIN DEMO &middot; 26 OCT 2026</span><span>8 / 8</span></div></section></body></html>

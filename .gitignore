@@ -166,7 +166,7 @@ pip-log.txt
 ## Custom
 #############
 
-log*
+/log.*
 *.ttf
 !res/font.ttf
 .checkstyle
@@ -175,6 +175,12 @@ log*
 /out/
 /scores
 /.demo-profile/
+/player_assets.properties
+/player_assets.properties.*
+
+# Gradle
+/.gradle/
+/build/
 
 .idea/
 *.iml

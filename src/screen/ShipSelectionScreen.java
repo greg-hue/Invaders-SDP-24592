@@ -5,6 +5,7 @@ import java.awt.event.KeyEvent;
 import engine.Cooldown;
 import engine.Core;
 import entity.ShipType;
+import audio.AudioManager;
 
 /**
  * Screen where the player selects a ship type in the Hangar.
@@ -24,6 +25,8 @@ public class ShipSelectionScreen extends Screen {
     private boolean wasMousePressed = false;
     private int lastMouseX = -1;
     private int lastMouseY = -1;
+    /** Option hovered in the previous frame, used only to time the hover sound. */
+    private int lastHoveredIndex = -1;
 
     /**
      * Constructor, establishes the properties of the screen.
@@ -65,6 +68,12 @@ public class ShipSelectionScreen extends Screen {
             this.selectedIndex = hoveredIndex;
         }
 
+        // Play the move sound only when the mouse enters a different option.
+        if (hoveredIndex != -1 && hoveredIndex != this.lastHoveredIndex) {
+            AudioManager.playSFX("audio/sfx/menu_move.wav");
+        }
+        this.lastHoveredIndex = hoveredIndex;
+
         // Detect a new left mouse click.
         boolean mousePressed = inputManager.isMousePressed();
         boolean newMouseClick = mousePressed && !wasMousePressed;
@@ -76,8 +85,8 @@ public class ShipSelectionScreen extends Screen {
                 && hoveredIndex != -1
                 && this.inputDelay.checkFinished()) {
             this.selectedIndex = hoveredIndex;
-            this.returnCode = SHIP_SELECTED;
-            this.isRunning = false;
+            confirmSelection();
+            if (!this.isRunning) return;
         }
 
         draw();
@@ -93,19 +102,28 @@ public class ShipSelectionScreen extends Screen {
                     (this.selectedIndex - 1 + this.shipTypes.length)
                             % this.shipTypes.length;
             this.selectionCooldown.reset();
+            AudioManager.playSFX("audio/sfx/menu_move.wav");
         } else if (this.inputManager.isKeyDown(KeyEvent.VK_DOWN)
                 || this.inputManager.isKeyDown(KeyEvent.VK_S)) {
             this.selectedIndex =
                     (this.selectedIndex + 1) % this.shipTypes.length;
             this.selectionCooldown.reset();
+            AudioManager.playSFX("audio/sfx/menu_move.wav");
         } else if (this.inputManager.isKeyDown(KeyEvent.VK_SPACE)
                 || this.inputManager.isKeyDown(KeyEvent.VK_ENTER)) {
-            this.returnCode = SHIP_SELECTED;
-            this.isRunning = false;
+            confirmSelection();
         } else if (this.inputManager.isKeyDown(KeyEvent.VK_ESCAPE)) {
             this.returnCode = RETURN_TO_HANGAR_MENU;
             this.isRunning = false;
+            AudioManager.playSFX("audio/sfx/menu_back.wav");
         }
+    }
+
+    private void confirmSelection() {
+        if (!Core.getShopController().isShipAvailable(getSelectedShip())) return;
+        this.returnCode = SHIP_SELECTED;
+        this.isRunning = false;
+        AudioManager.playSFX("audio/sfx/menu_select.wav");
     }
 
     private void draw() {

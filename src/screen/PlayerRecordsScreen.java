@@ -2,6 +2,7 @@ package screen;
 
 import java.awt.event.KeyEvent;
 
+import audio.AudioManager;
 import records.RecordsService;
 
 /** Local browsing page for completed runs and achievements. */
@@ -33,12 +34,14 @@ public final class PlayerRecordsScreen extends Screen {
             return;
         if (this.inputManager.isKeyDown(KeyEvent.VK_ESCAPE)
                 || this.inputManager.isKeyDown(KeyEvent.VK_SPACE)) {
+            AudioManager.playSFX("audio/sfx/menu_back.wav");
             this.returnCode = 1;
             this.isRunning = false;
         } else if (this.inputManager.isKeyDown(KeyEvent.VK_LEFT)
                 || this.inputManager.isKeyDown(KeyEvent.VK_RIGHT)) {
             this.tab = 1 - this.tab;
             this.nextInputAt = System.currentTimeMillis() + 250;
+            AudioManager.playSFX("audio/sfx/menu_move.wav");
         }
     }
 }

@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 import screen.Screen;
 import screen.DemoPanelScreen;
 import hud.FloatingScoreHud;
+import currency.PermanentUpgrade;
 import currency.PlayerAssetsState;
 import currency.ShopCatalog.Category;
 import shop.ShopController.SaveStatus;
@@ -58,6 +59,56 @@ public final class DrawManager {
                 - titleToAccuracy
                 - fontRegularMetrics.getDescent()
                 + fontBigMetrics.getAscent()) / 2;
+    }
+
+    /**
+     * Centers the complete achievement result block above the input prompt.
+     *
+     * @param screen
+     *                    Screen to draw on.
+     * @param isNewRecord
+     *                    If the score is a new high score.
+     * @param failedStage
+     *                    Failed stage number, or zero when no stage failed.
+     * @param achievementCount
+     *                    Number of newly unlocked achievements.
+     * @return Baseline for the game-over title.
+     */
+    private int getAchievementResultsTitleY(final Screen screen,
+            final boolean isNewRecord, final int failedStage,
+            final int achievementCount) {
+        int spacing = fontRegularMetrics.getHeight();
+        int lastLineOffset = 0;
+
+        if (failedStage > 0)
+            lastLineOffset += spacing;
+
+        // Gap before the four result rows, including the increment after the
+        // last row used by drawAchievementResults.
+        lastLineOffset += spacing * 2;
+        lastLineOffset += spacing * 4;
+
+        if (isNewRecord) {
+            // Gap before the three name-input rows and the increment after
+            // that block.
+            lastLineOffset += spacing;
+            lastLineOffset += spacing * 3;
+        }
+
+        // Achievement heading followed by one row per unlocked achievement.
+        lastLineOffset += spacing;
+        lastLineOffset += spacing * achievementCount;
+
+        int promptY = screen.getHeight() - spacing;
+        int availableTop = spacing;
+        int availableBottom = promptY - spacing * 2;
+        int blockHeight = fontBigMetrics.getAscent() + lastLineOffset
+                + fontRegularMetrics.getDescent();
+        int availableHeight = availableBottom - availableTop;
+        int blockTop = availableTop
+                + Math.max(0, (availableHeight - blockHeight) / 2);
+
+        return blockTop + fontBigMetrics.getAscent();
     }
 
     /** Singleton instance of the class. */
@@ -124,7 +175,9 @@ public final class DrawManager {
         /** Hyperfire falling power-up. */
         Hyperfire,
         /** Destroyed enemy ship. */
-        Explosion
+        Explosion,
+        /** Falling hazard. */
+        FallingObstacle
     };
 
     /**
@@ -150,6 +203,7 @@ public final class DrawManager {
             spriteMap.put(SpriteType.EnemyShipC2, new boolean[12][8]);
             spriteMap.put(SpriteType.EnemyShipSpecial, new boolean[16][7]);
             spriteMap.put(SpriteType.Explosion, new boolean[13][7]);
+            spriteMap.put(SpriteType.FallingObstacle, new boolean[13][7]);
 
             fileManager.loadSprite(spriteMap);
             logger.info("Finished loading the sprites.");
@@ -331,6 +385,39 @@ public final class DrawManager {
         int scoreX = screen.getWidth() - 60;
         drawIcon(Icon.SCORE, scoreX - Icon.SCORE.getWidth() * 2 - 6, 12, 2);
         backBufferGraphics.drawString(scoreString, scoreX, 25);
+    }
+
+    /** K, M, B, T, Q suffixes for shortened credits. */
+    private static final String[] CREDIT_SUFFIXES = { "", "K", "M", "B", "T", "Q" };
+
+    /**
+     * Draws credits with a coin icon right-aligned just left of the score.
+     * Up to 4 digits fit between the level label and the score.
+     */
+    public void drawCredits(final Screen screen, final long credits) {
+        backBufferGraphics.setFont(fontRegular);
+        backBufferGraphics.setColor(Color.WHITE);
+        String text = shortenCredits(credits);
+        // Ends 8px left of the score icon drawn by drawScore().
+        int textX = screen.getWidth() - 60 - Icon.SCORE.getWidth() * 2 - 14
+                - backBufferGraphics.getFontMetrics().stringWidth(text);
+        drawIcon(Icon.COIN, textX - 4 - Icon.COIN.getWidth() * 2, 12, 2);
+        backBufferGraphics.drawString(text, textX, 25);
+    }
+
+    /** 5+ digits become 12.3K or 123K, rounded down so it never shows more. */
+    private static String shortenCredits(final long credits) {
+        if (credits < 10000)
+            return Long.toString(credits);
+        long unit = 1;
+        int suffix = 0;
+        while (suffix < CREDIT_SUFFIXES.length - 1 && credits / unit >= 1000) {
+            unit *= 1000;
+            suffix++;
+        }
+        long whole = credits / unit;
+        return whole + (whole < 100 ? "." + credits % unit / (unit / 10) : "")
+                + CREDIT_SUFFIXES[suffix];
     }
 
     /**
@@ -740,6 +827,15 @@ public final class DrawManager {
                 stageFailedY);
     }
 
+    /** Draws the game mode as one more row of the results list. */
+    public void drawModeLabel(final Screen screen, final String modeLabel,
+            final boolean isNewRecord) {
+        int height = isNewRecord ? 4 : 2;
+        backBufferGraphics.setColor(Color.WHITE);
+        drawCenteredRegularString(screen, modeLabel, screen.getHeight()
+                / height + fontRegularMetrics.getHeight() * 8);
+    }
+
     /**
      * Draws high score screen title and instructions.
      *
@@ -874,9 +970,9 @@ public final class DrawManager {
     }
 
     /** Draws the shop cards and purchase/save feedback. */
-    public void drawShop(final Screen screen, final List<ShopProduct> items,
+    public void drawShop(final Screen screen, final List<ShopProduct> upgrades,
             final List<ShopProduct> unlocks, final PlayerAssetsState assets, final int section,
-            final int itemIndex, final int unlockIndex, final int actionIndex,
+            final int upgradeIndex, final int unlockIndex, final int actionIndex,
             final String feedback, final boolean purchaseSucceeded, final SaveStatus saveStatus) {
         int width = screen.getWidth();
         int height = screen.getHeight();
@@ -889,8 +985,8 @@ public final class DrawManager {
                 - Icon.COIN.getWidth() * 2 - 6, 47, 2);
 
         int cardSize = Math.max(76, Math.min(120, Math.min((width - 80) / 3, (height - 248) / 2)));
-        drawShopShelf(screen, items, assets, "Items", "No items available",
-                96, cardSize, itemIndex, section == 0);
+        drawShopShelf(screen, upgrades, assets, "Upgrades", "No upgrades available",
+                96, cardSize, upgradeIndex, section == 0);
         drawShopShelf(screen, unlocks, assets, "Unlocks", "No unlocks available",
                 132 + cardSize, cardSize, unlockIndex, section == 1);
 
@@ -948,20 +1044,45 @@ public final class DrawManager {
             int x, int y, int size, boolean selected) {
         backBufferGraphics.setColor(selected ? Color.GREEN : Color.DARK_GRAY);
         backBufferGraphics.drawRect(x, y, size, size);
-        boolean permanent = product.getCategory() == Category.UNLOCKABLE;
-        boolean owned = permanent && assets.getUnlockedContentIds().contains(product.getId());
-        Integer quantity = assets.getItemQuantities().get(product.getId());
-        String badge = owned ? "Owned" : !permanent ? "x" + (quantity == null ? 0 : quantity) : "";
+        boolean owned = assets.getUnlockedContentIds().contains(product.getId());
+        boolean available = product.isAvailableByDefault();
+        String badge = available ? "Available" : owned ? "Owned" : "";
         drawShopText(badge, x + 7, y + 12, 9, Color.GRAY, size - 14);
         backBufferGraphics.setColor(selected ? Color.GREEN : Color.WHITE);
-        drawShopCategoryIcon(permanent, x + size / 2 - 10, y + 20);
+        drawShopProductIcon(product, x + size / 2, y + 18);
         drawShopText(product.getName(), x + 9, y + 60, 11,
                 selected ? Color.GREEN : Color.WHITE, size - 18);
         drawShopDescription(product.getDescription(), x + 9, y + 75, size - 18);
         backBufferGraphics.setColor(Color.DARK_GRAY);
         backBufferGraphics.drawLine(x + 9, y + size - 25, x + size - 9, y + size - 25);
-        String price = owned ? "Unlocked" : product.getPrice() + " C";
-        drawShopText(price, x + 9, y + size - 9, 11, owned ? Color.GRAY : Color.WHITE, size - 18);
+        String price = available || owned ? "Unlocked" : product.getPrice() + " C";
+        drawShopText(price, x + 9, y + size - 9, 11, available || owned ? Color.GRAY : Color.WHITE, size - 18);
+    }
+
+    private void drawShopProductIcon(ShopProduct product, int centerX, int y) {
+        if (product.getShipType() != null) {
+            boolean[][] sprite = ShipSprites.forType(product.getShipType());
+            backBufferGraphics.setColor(Color.WHITE);
+            for (int x = 0; x < sprite.length; x++) {
+                for (int row = 0; row < sprite[x].length; row++) {
+                    if (sprite[x][row]) {
+                        backBufferGraphics.fillRect(centerX - sprite.length + x * 2, y + 8 + row * 2, 2, 2);
+                    }
+                }
+            }
+            return;
+        }
+        PermanentUpgrade upgrade = PermanentUpgrade.forProduct(product.getId());
+        if (upgrade == null) {
+            drawShopCategoryIcon(product.getCategory() == Category.UNLOCKABLE, centerX - 10, y + 2);
+            return;
+        }
+        Icon icon = switch (upgrade) {
+        case HULL -> Icon.UPGRADE_HULL;
+        case ENGINE -> Icon.UPGRADE_ENGINE;
+        case RELOADER -> Icon.UPGRADE_RELOADER;
+        };
+        drawIcon(icon, centerX - icon.getWidth(), y, 2);
     }
 
     /** Neutral placeholders until content owners supply agreed product artwork. */
@@ -1572,7 +1693,6 @@ public final class DrawManager {
         drawCenteredRegularString(screen, achievement.getCondition(),
                 screen.getHeight() / 7 + fontRegularMetrics.getHeight());
     }
-
     public void drawAchievementResults(final Screen screen, final int score,
             final int lives, final int enemies, final float accuracy,
             final boolean isNewRecord, final char[] name, final int selected,
@@ -1586,8 +1706,19 @@ public final class DrawManager {
             final boolean isNewRecord, final char[] name, final int selected,
             final List<Achievement> achievements, final boolean acceptsInput, final int failedStage,
             final boolean gameCleared) {
+        drawAchievementResults(screen, score, lives, enemies, accuracy,
+                isNewRecord, name, selected, achievements, acceptsInput,
+                failedStage, gameCleared, null);
+    }
+
+    public void drawAchievementResults(final Screen screen, final int score,
+            final int lives, final int enemies, final float accuracy,
+            final boolean isNewRecord, final char[] name, final int selected,
+            final List<Achievement> achievements, final boolean acceptsInput,
+            final int failedStage, final boolean gameCleared, final String modeLabel) {
         int spacing = fontRegularMetrics.getHeight();
-        int y = fontBigMetrics.getHeight() + 10;
+        int y = getAchievementResultsTitleY(screen, isNewRecord, failedStage,
+                achievements.size());
         backBufferGraphics.setColor(Color.GREEN);
         drawCenteredBigString(screen, gameCleared ? "Game Cleared!" : "Game Over", y);
         if (failedStage > 0) {
@@ -1600,6 +1731,8 @@ public final class DrawManager {
         String[] results = { "Score " + score, "Lives remaining " + lives,
                 "Enemies destroyed " + enemies,
                 String.format("Accuracy %.2f%%", accuracy * 100) };
+        if (modeLabel != null)
+            results = new String[] { results[0], results[1], results[2], results[3], modeLabel };
         for (String result : results) {
             drawCenteredRegularString(screen, result, y);
             y += spacing;
@@ -1909,7 +2042,8 @@ public final class DrawManager {
     public void drawShipSelection(final Screen screen, final ShipType[] shipTypes,
             final int selectedIndex) {
         String titleString = "SELECT SHIP";
-        String instructionsString = "SPACE: SELECT   ESC: BACK";
+        String instructionsString = Core.getShopController().isShipAvailable(shipTypes[selectedIndex])
+                ? "SPACE: SELECT   ESC: BACK" : "UNLOCK IN SHOP   ESC: BACK";
 
         backBufferGraphics.setColor(Color.GREEN);
         drawCenteredRegularString(screen, titleString, screen.getHeight() / 6);
@@ -1920,14 +2054,20 @@ public final class DrawManager {
         for (int i = 0; i < shipTypes.length; i++) {
             ShipType type = shipTypes[i];
             boolean isSelected = (i == selectedIndex);
+            boolean available = Core.getShopController().isShipAvailable(type);
 
-            if (isSelected) {
+            if (!available) {
+                int scale = 3;
+                drawIcon(Icon.LOCK, screen.getWidth() / 2 - Icon.LOCK.getWidth() * scale / 2,
+                        startY + i * spacing - 50, scale, Color.GRAY);
+            } else if (isSelected) {
                 entity.Ship previewShip = new entity.Ship(screen.getWidth() / 2 - 13,
                         startY + i * spacing - 40, type);
                 drawEntity(previewShip, screen.getWidth() / 2 - 13, startY + i * spacing - 40);
             }
 
-            String name = (isSelected ? "> " : "") + type.getName() + (isSelected ? " <" : "");
+            String name = (isSelected ? "> " : "") + type.getName()
+                    + (available ? "" : " [LOCKED]") + (isSelected ? " <" : "");
             String stats = String.format("SPEED: %d | HP: %d | RELOAD: %dMS",
                     type.getSpeed(), type.getMaxLives(), type.getShootingInterval());
 

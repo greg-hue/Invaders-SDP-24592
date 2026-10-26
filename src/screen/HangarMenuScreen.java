@@ -73,7 +73,11 @@ public class HangarMenuScreen extends Screen {
         }
 
         this.isRunning = false;
-        AudioManager.playSFX("audio/sfx/menu_select.wav");
+        if (this.returnCode == RETURN_TO_MAIN_MENU) {
+            AudioManager.playSFX("audio/sfx/menu_back.wav");
+        } else {
+            AudioManager.playSFX("audio/sfx/menu_select.wav");
+        }
     }
 
     private void draw() {

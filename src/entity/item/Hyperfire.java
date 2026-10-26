@@ -3,7 +3,7 @@ package entity.item;
 
 import entity.Ship;
 import engine.DrawManager.SpriteType;
-
+import audio.AudioManager;
 /**
  * Hyperfire item.
  * Reduces the player's shooting cooldown by 60%
@@ -27,6 +27,7 @@ public class Hyperfire extends Item {
     @Override
     public void applyEffect(final Ship ship) {
         ship.setHyperfireEnabled(true);
+        AudioManager.playSFX("audio/sfx/item_hyperfire_activate.wav");
     }
 
     /**
