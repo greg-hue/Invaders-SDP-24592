@@ -1858,6 +1858,55 @@ public final class DrawManager {
         return -1;
     }
 
+    
+/**
+ * Returns the volume option under the mouse, or -1 if no bar is hovered.
+ * 0 = BGM, 1 = SFX.
+ */
+public int getAudioSettingsBarAt(final Screen screen,
+        final int mouseX, final int mouseY) {
+
+    if (fontRegularMetrics == null)
+        return -1;
+
+    int columnLeft = screen.getWidth() / 2 - AUDIO_COLUMN_WIDTH / 2;
+    int firstOptionY = screen.getHeight() / 3;
+    int optionSpacing = fontRegularMetrics.getHeight() * 4;
+
+    // Only the first two options have volume bars.
+    for (int i = 0; i < 2; i++) {
+        int barLeft = columnLeft;
+        int barRight = columnLeft + AUDIO_COLUMN_WIDTH;
+        int barTop = firstOptionY + optionSpacing * i
+                + AUDIO_BAR_GAP;
+        int barBottom = barTop + AUDIO_BAR_HEIGHT;
+
+        if (mouseX >= barLeft && mouseX <= barRight
+                && mouseY >= barTop && mouseY <= barBottom) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+/**
+ * Converts the mouse horizontal position into a volume from 0 to 100.
+ */
+public int getAudioSettingsVolumeFromMouseX(final Screen screen,
+        final int mouseX) {
+
+    int columnLeft = screen.getWidth() / 2 - AUDIO_COLUMN_WIDTH / 2;
+
+    double ratio = (double) (mouseX - columnLeft)
+            / AUDIO_COLUMN_WIDTH;
+
+    ratio = Math.max(0.0, Math.min(1.0, ratio));
+
+    return (int) Math.round(ratio * 100);
+}
+
+
     /**
      * Returns the index of the horizontally centered option under the mouse.
      *

@@ -37,6 +37,9 @@ public class AudioControlScreen extends Screen {
 	/** Highest volume. */
 	private static final int MAX_VOLUME = 100;
 
+	/** Volume option currently being dragged, or -1 if none. */
+private int draggedVolumeOption = -1;
+
 	/** Time between changes in user selection. */
 	private Cooldown selectionCooldown;
 
@@ -157,30 +160,95 @@ public class AudioControlScreen extends Screen {
 	 * Selects the option under the mouse. Clicking the mute option toggles
 	 * the mute state.
 	 */
-	private void handleMouse() {
-		int hoveredOption = drawManager.getAudioSettingsOptionAt(this,
-				OPTION_COUNT, inputManager.getMouseX(), inputManager.getMouseY());
+	
+/**
+ * Handles mouse selection, volume dragging, and mute clicks.
+ */
+private void handleMouse() {
+    int mouseX = inputManager.getMouseX();
+    int mouseY = inputManager.getMouseY();
 
-		// Select an option when the mouse moves onto it.
-		if (hoveredOption != this.lastHoveredOption) {
-			this.lastHoveredOption = hoveredOption;
-			if (hoveredOption != -1 && hoveredOption != this.selectedOption) {
-				this.selectedOption = hoveredOption;
-				AudioManager.playSFX("audio/sfx/menu_move.wav");
-			}
-		}
+    int hoveredOption = drawManager.getAudioSettingsOptionAt(
+            this, OPTION_COUNT, mouseX, mouseY);
 
-		boolean mousePressed = inputManager.isMousePressed();
-		boolean newMouseClick = mousePressed && !this.wasMousePressed;
-		this.wasMousePressed = mousePressed;
+    int hoveredBar = drawManager.getAudioSettingsBarAt(
+            this, mouseX, mouseY);
 
-		if (newMouseClick && hoveredOption == MUTE_OPTION
-				&& this.inputDelay.checkFinished()) {
-			this.selectedOption = MUTE_OPTION;
-			toggleMute();
-			this.selectionCooldown.reset();
-		}
-	}
+    // Select an option when the mouse moves onto it.
+    if (hoveredOption != this.lastHoveredOption) {
+        this.lastHoveredOption = hoveredOption;
+
+        if (hoveredOption != -1
+                && hoveredOption != this.selectedOption) {
+            this.selectedOption = hoveredOption;
+            AudioManager.playSFX("audio/sfx/menu_move.wav");
+        }
+    }
+
+    boolean mousePressed = inputManager.isMousePressed();
+    boolean newMouseClick = mousePressed && !this.wasMousePressed;
+    this.wasMousePressed = mousePressed;
+
+    if (newMouseClick && this.inputDelay.checkFinished()) {
+        // Start dragging if the click begins on a volume bar.
+        if (hoveredBar != -1) {
+            this.selectedOption = hoveredBar;
+            this.draggedVolumeOption = hoveredBar;
+            this.selectionCooldown.reset();
+        } else if (hoveredOption == MUTE_OPTION) {
+            this.selectedOption = MUTE_OPTION;
+            toggleMute();
+            this.selectionCooldown.reset();
+        }
+    }
+
+    // Update the volume continuously while dragging.
+    if (mousePressed && this.draggedVolumeOption != -1
+            && this.inputDelay.checkFinished()) {
+
+        int volume = drawManager.getAudioSettingsVolumeFromMouseX(
+                this, mouseX);
+
+        if (this.draggedVolumeOption == BGM_VOLUME_OPTION) {
+            setBGMVolumeFromMouse(volume);
+        } else if (this.draggedVolumeOption == SFX_VOLUME_OPTION) {
+            setSFXVolumeFromMouse(volume);
+        }
+    }
+
+    // Stop dragging when the mouse button is released.
+    if (!mousePressed) {
+        this.draggedVolumeOption = -1;
+    }
+}
+
+
+/**
+ * Sets the BGM volume from mouse input.
+ */
+private void setBGMVolumeFromMouse(final int volume) {
+    int clampedVolume = Math.max(MIN_VOLUME,
+            Math.min(MAX_VOLUME, volume));
+
+    if (AudioManager.getBGMVolume() != clampedVolume) {
+        AudioManager.setBGMVolume(clampedVolume);
+        AudioControls.saveBGMVolume();
+    }
+}
+
+/**
+ * Sets the SFX volume from mouse input.
+ */
+private void setSFXVolumeFromMouse(final int volume) {
+    int clampedVolume = Math.max(MIN_VOLUME,
+            Math.min(MAX_VOLUME, volume));
+
+    if (AudioManager.getSFXVolume() != clampedVolume) {
+        AudioManager.setSFXVolume(clampedVolume);
+        AudioControls.saveSFXVolume();
+    }
+}
+
 
 	/**
 	 * Shifts the focus to the next menu option.
