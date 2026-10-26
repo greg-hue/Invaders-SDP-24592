@@ -99,6 +99,17 @@ public class ControlsSettingsScreen extends Screen {
     }
 
     /**
+     * Turns off the global mute key while a new key is being captured,
+     * so pressing M to assign it does not also toggle mute.
+     *
+     * @return False while waiting for a new key, otherwise true.
+     */
+    @Override
+    protected boolean usesGlobalMuteKey() {
+        return !this.waitingForKey;
+    }
+
+    /**
      * Selects the option under the mouse and confirms it on a click.
      *
      * @param newMouseClick

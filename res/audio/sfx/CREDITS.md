@@ -192,6 +192,22 @@ documented below for completeness.
 
 
 
+## boss_hit.wav
+
+- Original: "laser" by Gumichan01
+- Source: https://opengameart.org/content/shots
+- License: CC-BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/)
+- Changes: None
+
+## item_grenade_launch.wav
+
+- Original: Created for this project (synthesized short launch thump with a whoosh, no third-party source)
+- Source: Generated with a Python (NumPy) script, made with AI assistance
+- License: No third-party license; original work for this project
+- Changes: None (16-bit / 44.1kHz mono WAV)
+
+
+
 ## wave_transition.wav
 
 - Original: "jingles_NES01.ogg" from "Music Jingles" by Kenney
@@ -222,6 +238,7 @@ documented below for completeness.
 - Source: https://freesound.org/people/cabled_mess/sounds/350985/
 - License: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
 - Changes: Renamed file and increased volume by 9 dB.
+
 
 
 ## item_grenade_explode.wav
@@ -278,3 +295,48 @@ documented below for completeness.
 - Source: https://freesound.org/people/quatricise/sounds/582371/
 - License: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
 - Changes: Renamed, converted to 16-bit / 44.1kHz WAV, volume lowered.
+
+
+## shop_purchase_failure.wav
+
+- Original: "Wrong Choice" by unadamlar
+- Source: https://freesound.org/people/unadamlar/sounds/476177/
+- License: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
+- Changes: None
+
+
+## shop_successful_purchase.wav
+
+- Original: "Game Reward" by IENBA
+- Source: https://freesound.org/people/IENBA/sounds/656643/
+- License: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
+- Changes: None
+
+
+## boss_spawn.wav
+
+- Original: "sfx_alarm_loop2.wav" from "The Essential Retro Video Game Sound Effects Collection [512 sounds]" by SubspaceAudio
+- Source: https://opengameart.org/content/512-sound-effects-8-bit-style
+- License: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
+- Changes: Renamed only (16-bit / 44.1kHz mono WAV)
+
+## boss_phase.wav
+
+- Original: "sfx_movement_portal6.wav" from "The Essential Retro Video Game Sound Effects Collection [512 sounds]" by SubspaceAudio
+- Source: https://opengameart.org/content/512-sound-effects-8-bit-style
+- License: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
+- Changes: Renamed only (16-bit / 44.1kHz mono WAV)
+
+## boss_shoot.wav
+
+- Original: "sfx_wpn_cannon1.wav" from "The Essential Retro Video Game Sound Effects Collection [512 sounds]" by SubspaceAudio
+- Source: https://opengameart.org/content/512-sound-effects-8-bit-style
+- License: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
+- Changes: Renamed only (16-bit / 44.1kHz mono WAV)
+
+## boss_explosion.wav
+
+- Original: "sfx_exp_long6.wav" from "The Essential Retro Video Game Sound Effects Collection [512 sounds]" by SubspaceAudio
+- Source: https://opengameart.org/content/512-sound-effects-8-bit-style
+- License: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
+- Changes: Renamed only (16-bit / 44.1kHz mono WAV)

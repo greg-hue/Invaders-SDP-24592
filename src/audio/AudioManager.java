@@ -68,7 +68,11 @@ public class AudioManager {
             });
             audioMixer.registerPlaybackGroup("bgm", bgmBus);
             audioMixer.registerPlaybackGroup("sfx", sfxBus);
-            if (audioCache == null) audioCache = new AudioCache();
+            if (audioCache == null) {
+                audioCache = new AudioCache();
+                audioCache.preload("audio/bgm");
+                audioCache.preload("audio/sfx");
+            }
             logger.info("Audio system initialized.");
             initialized = true;
         } catch (Exception e) {

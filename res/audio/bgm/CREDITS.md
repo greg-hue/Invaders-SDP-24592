@@ -40,6 +40,14 @@ Third-party background music used in this project and their licenses.
 - Source: https://opengameart.org/content/bumblebee-loop
 - License: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
 
+
+## music_boss
+
+- Original: "battleThemeA" by cynicmusic
+- Source: https://opengameart.org/content/battle-theme-a
+- License: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
+
+
 ## music_shop
 
 - Original: "Stereotypical 90's space shooter music" by Jan125

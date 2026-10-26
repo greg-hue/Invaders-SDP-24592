@@ -1,9 +1,12 @@
 package screen;
 
 import java.awt.Insets;
+import java.awt.event.KeyEvent;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import audio.AudioControls;
+import engine.ControlsConfig;
 import engine.Cooldown;
 import engine.Core;
 import engine.DrawManager;
@@ -48,6 +51,9 @@ public class Screen {
 	protected boolean isRunning;
 	/** What kind of screen goes next. */
 	protected int returnCode;
+
+	/** Checks if the mute key was held down in the previous frame. */
+	private static boolean muteKeyWasDown;
 
 	/**
 	 * Constructor, establishes the properties of the screen.
@@ -117,6 +123,46 @@ public class Screen {
 	 * Updates the elements on screen and checks for events.
 	 */
 	protected void update() {
+		handleMuteKey();
+	}
+
+	/**
+	 * Toggles the mute state when the M key is pressed.
+	 * Called from update, so it works on every screen whose update calls
+	 * super.update(). Holding the key toggles only once, and the key state
+	 * is shared by all screens so a new screen does not toggle it again.
+	 * The key state is still updated on screens where usesGlobalMuteKey
+	 * returns false.
+	 */
+	private void handleMuteKey() {
+		boolean muteKeyDown = inputManager.isKeyDown(KeyEvent.VK_M);
+		if (muteKeyDown && !muteKeyWasDown && usesGlobalMuteKey()
+				&& !isMuteKeyBoundElsewhere())
+			AudioControls.toggleMute();
+		muteKeyWasDown = muteKeyDown;
+	}
+
+	/**
+	 * Checks whether the M key is also bound to movement or firing.
+	 * The global mute key is turned off in that case, so the same key
+	 * does not move or fire and toggle the mute state at once.
+	 *
+	 * @return True if M is used by another control.
+	 */
+	private static boolean isMuteKeyBoundElsewhere() {
+		return ControlsConfig.getKey(ControlsConfig.LEFT) == KeyEvent.VK_M
+				|| ControlsConfig.getKey(ControlsConfig.RIGHT) == KeyEvent.VK_M
+				|| ControlsConfig.getKey(ControlsConfig.FIRE) == KeyEvent.VK_M;
+	}
+
+	/**
+	 * Checks if the M key toggles the global mute on this screen.
+	 * Screens that handle the M key themselves can return false.
+	 *
+	 * @return True if the M key toggles the global mute.
+	 */
+	protected boolean usesGlobalMuteKey() {
+		return true;
 	}
 
 	/**
