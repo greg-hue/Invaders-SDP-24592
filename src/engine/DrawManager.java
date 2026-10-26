@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import screen.MenuSprites;
 import screen.Screen;
 import hud.FloatingScoreHud;
 import currency.PlayerAssetsState;
@@ -253,112 +252,6 @@ public final class DrawManager {
                     backBufferGraphics.drawRect(positionX + i * 2, positionY
                             + j * 2, 1, 1);
     }
-
-	/**
-	 * Draws a sprite made of filled pixels, enlarged by a scale factor.
-	 *
-	 * @param sprite
-	 *            Sprite, indexed [row][column].
-	 * @param positionX
-	 *            Left edge of the sprite.
-	 * @param positionY
-	 *            Upper edge of the sprite.
-	 * @param scale
-	 *            Size in pixels of each sprite pixel.
-	 * @param color
-	 *            Color of the sprite.
-	 */
-	public void drawSprite(final boolean[][] sprite, final int positionX,
-			final int positionY, final int scale, final Color color) {
-		backBufferGraphics.setColor(color);
-		for (int row = 0; row < sprite.length; row++)
-			for (int col = 0; col < sprite[row].length; col++)
-				if (sprite[row][col])
-					backBufferGraphics.fillRect(positionX + col * scale,
-							positionY + row * scale, scale, scale);
-	}
-
-		/**
-	 * Draws an icon on the left of each main menu entry. The icon of the
-	 * selected entry is green and bounces.
-	 *
-	 * @param screen
-	 *            Screen to draw on.
-	 * @param option
-	 *            Option selected.
-	 * @param frame
-	 *            Frame counter, drives the bounce.
-	 */
-	
-/**
- * Draws an icon on the left of each main menu entry.
- * The selected entry is green and its icon bounces.
- *
- * @param screen Screen to draw on.
- * @param option Currently selected menu option.
- * @param frame Frame counter used for the animation.
- */
-public void drawMenuIcons(final Screen screen, final int option,
-        final int frame) {
-
-    boolean[][][] icons = {
-        MenuSprites.ICON_PLAY,    // Play
-        MenuSprites.ICON_SHOP,    // Shop
-        MenuSprites.ICON_HANGAR,  // Hangar
-        MenuSprites.ICON_TROPHY,  // High scores
-        MenuSprites.ICON_RECORDS, // Records & Achievements
-        MenuSprites.ICON_GEAR,    // Settings
-        MenuSprites.ICON_DOOR     // Exit
-    };
-
-    String[] labels = {
-        "Play",
-        "Shop",
-        "Hangar",
-        "High scores",
-        "Records & Achievements",
-        "Settings",
-        "Exit"
-    };
-
-    int[] codes = { 2, 10, 11, 3, 9, 4, 0 };
-
-    int scale = 2;
-    int fontHeight = fontRegularMetrics.getHeight();
-    int spacing = fontHeight * 3 / 2;
-    int firstY = screen.getHeight() / 2 + fontHeight * 2;
-
-    for (int i = 0; i < icons.length; i++) {
-
-        // Use the exact same baseline as the menu text.
-        int baseline = firstY + i * spacing;
-
-        // Center the icon vertically with the text.
-        int iconHeight = icons[i].length * scale;
-        int center = baseline
-                - (fontRegularMetrics.getAscent()
-                - fontRegularMetrics.getDescent()) / 2;
-
-        int y = center - iconHeight / 2;
-
-        // Position the icon to the left of its label.
-        int textWidth = fontRegularMetrics.stringWidth(labels[i]);
-        int textLeft = screen.getWidth() / 2 - textWidth / 2;
-        int iconWidth = icons[i][0].length * scale;
-        int x = textLeft - iconWidth - 10;
-
-        // Highlight and animate the selected option.
-        Color color = Color.WHITE;
-
-        if (codes[i] == option) {
-            color = Color.GREEN;
-            y -= (int) (Math.abs(Math.sin(frame / 7.0)) * 6);
-        }
-
-        drawSprite(icons[i], x, y, scale, color);
-    }
-}
-
 
     /**
      * For debugging purpouses, draws the canvas borders.
